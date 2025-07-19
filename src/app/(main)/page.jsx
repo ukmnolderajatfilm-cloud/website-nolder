@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import Image from "next/image";
 import Opener from "./Layouts/Opener";
+import Background from "./Layouts/Background";
+import Navbar from "./Layouts/Navbar";
+import AboutBentoLayout from "./Layouts/AboutBentoLayout";
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
@@ -15,7 +18,10 @@ export default function Home() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
+      {/* Navbar - Only show when main content is visible */}
+      {showMainContent && <Navbar />}
+      
       {/* Opener Component */}
       {!showMainContent && (
         <Opener onAnimationComplete={handleOpenerComplete} />
@@ -23,114 +29,187 @@ export default function Home() {
       
       {/* Main Content */}
       {showMainContent && (
-        <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 animate-fade-in">
-          <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-            <Image
-              className="dark:invert"
-              src="/next.svg"
-              alt="Next.js logo"
-              width={180}
-              height={38}
-              priority
-            />
-            <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-              <li className="mb-2 tracking-[-.01em]">
-              Hello World{" "}
-                <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-                  src/app/page.js
-                </code>
-                .
-              </li>
-              <li className="tracking-[-.01em]">
-                Save and see your changes instantly.
-              </li>
-            </ol>
-
-            <div className="flex gap-4 items-center flex-col sm:flex-row">
-              <a
-                className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-                href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Image
-                  className="dark:invert"
-                  src="/vercel.svg"
-                  alt="Vercel logomark"
-                  width={20}
-                  height={20}
-                />
-                Deploy now
-              </a>
-              <a
-                className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-                href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Read our docs
-              </a>
+        <div className="relative z-10 animate-fade-in">
+          {/* Hero Section with Background Beams */}
+          <div className="relative font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 pt-24">
+            {/* Background Beams - Only for Hero Section */}
+            <div className="absolute inset-0 overflow-hidden">
+              <Background 
+                beamWidth={5}
+                beamHeight={25}
+                beamNumber={30}
+                lightColor="#ffffff"
+                speed={5}
+                noiseIntensity={3}
+                scale={0.15}
+                rotation={52}
+              />
             </div>
-          </main>
-          <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-            <a
-              className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            
+            {/* Content Overlay - Much lighter for better visibility */}
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" style={{ zIndex: 1 }} />
+            
+            <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start relative z-20">
               <Image
-                aria-hidden
-                src="/file.svg"
-                alt="File icon"
-                width={16}
-                height={16}
+                className="dark:invert drop-shadow-2xl"
+                src="/next.svg"
+                alt="Next.js logo"
+                width={200}
+                height={42}
+                priority
               />
-              Learn
-            </a>
-            <a
-              className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                aria-hidden
-                src="/window.svg"
-                alt="Window icon"
-                width={16}
-                height={16}
-              />
-              Examples
-            </a>
-            <a
-              className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-              href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                aria-hidden
-                src="/globe.svg"
-                alt="Globe icon"
-                width={16}
-                height={16}
-              />
-              Go to nextjs.org →
-            </a>
+              <ol className="font-mono list-inside list-decimal text-base text-center sm:text-left text-white drop-shadow-lg bg-black/20 p-4 rounded-lg backdrop-blur-sm">
+                <li className="mb-3 tracking-[-.01em] font-medium">
+                  Hello World{" "}
+                  <code className="bg-white/[.2] backdrop-blur-sm border border-white/[.3] font-mono font-bold px-2 py-1 rounded text-white shadow-lg">
+                    src/app/page.js
+                  </code>
+                  .
+                </li>
+                <li className="tracking-[-.01em] font-medium">
+                  Save and see your changes instantly.
+                </li>
+              </ol>
+
+              <div className="flex gap-6 items-center flex-col sm:flex-row">
+                <a
+                  className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center bg-white/[.15] text-white gap-3 hover:bg-white/[.25] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 shadow-md"
+                  href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    className="dark:invert"
+                    src="/vercel.svg"
+                    alt="Vercel logomark"
+                    width={24}
+                    height={24}
+                  />
+                  Deploy now
+                </a>
+                <a
+                  className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center hover:bg-white/[.15] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 w-full sm:w-auto text-white shadow-md"
+                  href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Read our docs
+                </a>
+              </div>
+            </main>
+          </div>
+
+          {/* About Us Section - With MagicBento */}
+          <section className="relative z-20 py-20 px-8 sm:px-20 bg-black">
+            <div className="max-w-6xl mx-auto">
+              {/* Section Header */}
+              <div className="text-center mb-16">
+                <h2 className="text-5xl sm:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+                  ABOUT US
+                </h2>
+                <div className="w-24 h-1 bg-white mx-auto mb-8 opacity-80"></div>
+                <p className="text-xl sm:text-2xl text-white/80 font-light max-w-3xl mx-auto leading-relaxed">
+                  Kami adalah komunitas filmmaker yang berdedikasi untuk menciptakan karya-karya visual yang menginspirasi dan bermakna.
+                </p>
+              </div>
+
+              {/* MagicBento Content Grid - Replacing the old grid */}
+              <AboutBentoLayout />
+
+              {/* Call to Action */}
+              <div className="text-center mt-20">
+                <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-md border border-white/30 rounded-2xl p-12 hover:from-white/25 hover:to-white/15 transition-all duration-300">
+                  <h3 className="text-4xl font-bold text-white mb-6">Mari Berkolaborasi</h3>
+                  <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
+                    Punya ide kreatif atau proyek yang ingin diwujudkan? 
+                    Mari bergabung dengan kami untuk menciptakan karya yang luar biasa.
+                  </p>
+                  <div className="flex gap-4 justify-center flex-col sm:flex-row">
+                    <a
+                      href="/contact"
+                      className="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-semibold rounded-full hover:bg-white/90 transition-all duration-300 hover:scale-105 shadow-lg"
+                    >
+                      Hubungi Kami
+                    </a>
+                    <a
+                      href="/portofolio"
+                      className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-full hover:bg-white/10 hover:border-white/50 transition-all duration-300 hover:scale-105"
+                    >
+                      Lihat Portfolio
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="relative z-20 py-8 px-8 sm:px-20 bg-black">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex gap-[32px] flex-wrap items-center justify-center bg-black/20 p-6 rounded-lg backdrop-blur-sm">
+                <a
+                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
+                  href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    aria-hidden
+                    src="/file.svg"
+                    alt="File icon"
+                    width={18}
+                    height={18}
+                    className="invert"
+                  />
+                  Learn
+                </a>
+                <a
+                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
+                  href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    aria-hidden
+                    src="/window.svg"
+                    alt="Window icon"
+                    width={18}
+                    height={18}
+                    className="invert"
+                  />
+                  Examples
+                </a>
+                <a
+                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
+                  href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    aria-hidden
+                    src="/globe.svg"
+                    alt="Globe icon"
+                    width={18}
+                    height={18}
+                    className="invert"
+                  />
+                  Go to nextjs.org →
+                </a>
+              </div>
+            </div>
           </footer>
         </div>
       )}
       
       <style jsx>{`
         .animate-fade-in {
-          animation: fadeIn 0.8s ease-in-out;
+          animation: fadeIn 1s ease-out;
         }
         
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
           }
           to {
             opacity: 1;
