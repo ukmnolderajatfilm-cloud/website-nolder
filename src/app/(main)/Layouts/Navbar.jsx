@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,8 +20,15 @@ const Navbar = () => {
             {/* Logo Section - Pojok Kiri */}
             <Link href="/" className="flex items-center gap-3 group transition-all duration-300 hover:scale-105">
               {/* Logo Kotak */}
-              <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/10 border border-white/30 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:from-white/30 group-hover:to-white/20 transition-all duration-300">
-                <div className="w-6 h-6 bg-white rounded-sm"></div>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:from-white/30 group-hover:to-white/20 transition-all duration-300">
+                <Image 
+                  src="/Images/nolder-logo.png" 
+                  alt="Nolder Logo" 
+                  width={40} 
+                  height={40}
+                  className="object-contain"
+                  priority
+                />
               </div>
               
               {/* Text "Nol Derajat Film" */}

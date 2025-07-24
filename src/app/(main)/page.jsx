@@ -6,12 +6,13 @@ import Opener from "./Layouts/Opener";
 import Background from "./Layouts/Background";
 import Navbar from "./Layouts/Navbar";
 import AboutBentoLayout from "./Layouts/AboutBentoLayout";
+import ScrolingJargon from "./Layouts/ScrolingJargon";
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
 
   const handleOpenerComplete = () => {
-    // Delay untuk memberikan waktu transisi slide up
+    // Delay untuk memberikan waktu transisi slide up ke main content
     setTimeout(() => {
       setShowMainContent(true);
     }, 1000);
@@ -30,6 +31,8 @@ export default function Home() {
       {/* Main Content */}
       {showMainContent && (
         <div className="relative z-10 animate-fade-in">
+          
+          
           {/* Hero Section with Background Beams */}
           <div className="relative font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 pt-24">
             {/* Background Beams - Only for Hero Section */}
@@ -98,6 +101,16 @@ export default function Home() {
               </div>
             </main>
           </div>
+
+          {/* ScrollingJargon Section */}
+          <ScrolingJargon 
+            velocity={100}
+            damping={60}
+            stiffness={300}
+            numCopies={10}
+            velocityMapping={{ input: [0, 1000], output: [0, 4] }}
+            className="text-glow"
+          />
 
           {/* About Us Section - With MagicBento */}
           <section className="relative z-20 py-20 px-8 sm:px-20 bg-black">
