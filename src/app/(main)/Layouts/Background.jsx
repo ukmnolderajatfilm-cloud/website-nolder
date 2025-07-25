@@ -16,8 +16,14 @@ const Background = ({
 }) => {
   return (
     <div 
-      className={`fixed inset-0 w-full h-full pointer-events-none ${className}`}
-      style={{ zIndex: -1 }}
+      className={`absolute top-0 left-1/2 transform -translate-x-1/2 pointer-events-none ${className}`}
+      style={{ 
+        width: '1920px',
+        height: '1080px',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+        zIndex: -1 
+      }}
     >
       <Beams
         beamWidth={beamWidth}

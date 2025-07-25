@@ -24,7 +24,7 @@ const ScrolingJargon = ({
         priority
       />
 
-      <span>   STOP DREAMING START ACTION   </span>
+      <span>   STOP DREAMING START ACTION  </span>
     </span>
   );
 
@@ -34,24 +34,18 @@ const ScrolingJargon = ({
   ];
 
   return (
-    <section className=" bg-black overflow-hidden">
+    <section className="overflow-hidden">
       <div className="relative">
         <ScrollVelocity
           texts={scrollTexts}
           velocity={velocity}
-          className={`text-white ${className}`}
-          damping={damping}
-          stiffness={stiffness}
-          numCopies={numCopies}
-          velocityMapping={velocityMapping}
-          scrollerClassName="flex items-center"
-          parallaxStyle={{
-            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)'
-          }}
+          className={`text-white text-5xl ${className}`}
           scrollerStyle={{
-            fontWeight: '500',
-            textShadow: '0 0 10px rgba(255, 255, 255, 0.2)',
+            fontSize: 'inherit',
+            lineHeight: '1.1',
+          }}
+          parallaxStyle={{
+            marginBottom: '-1rem',
           }}
         />
       </div>
@@ -59,7 +53,15 @@ const ScrolingJargon = ({
       <style jsx>{`
         section {
           position: relative;
+        }
         
+        section :global(section) {
+          margin-bottom: -2rem;
+          line-height: 0.9;
+        }
+        
+        section :global(section:last-child) {
+          margin-bottom: 0;
         }
         
         .text-glow {
@@ -72,6 +74,10 @@ const ScrolingJargon = ({
         @media (max-width: 768px) {
           section {
             padding: 1rem 0;
+          }
+          
+          section :global(section) {
+            margin-bottom: -1.5rem;
           }
         }
       `}</style>

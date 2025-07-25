@@ -55,62 +55,54 @@ export default function Home() {
             <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start relative z-20">
               <Image
                 className="dark:invert drop-shadow-2xl"
-                src="/next.svg"
-                alt="Next.js logo"
-                width={200}
-                height={42}
+                src="/Images/nolder-logo.png"
+                alt="Nolder Logo"
+                width={80}
+                height={80}
                 priority
               />
-              <ol className="font-mono list-inside list-decimal text-base text-center sm:text-left text-white drop-shadow-lg bg-black/20 p-4 rounded-lg backdrop-blur-sm">
-                <li className="mb-3 tracking-[-.01em] font-medium">
-                  Hello World{" "}
-                  <code className="bg-white/[.2] backdrop-blur-sm border border-white/[.3] font-mono font-bold px-2 py-1 rounded text-white shadow-lg">
-                    src/app/page.js
-                  </code>
-                  .
-                </li>
-                <li className="tracking-[-.01em] font-medium">
-                  Save and see your changes instantly.
-                </li>
-              </ol>
+              
+              <div className="text-center sm:text-left">
+                <h1 className="text-4xl sm:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+                  NOL DERAJAT FILM
+                </h1>
+                <p className="text-lg sm:text-xl text-white/80 font-light leading-relaxed max-w-2xl">
+                  Komunitas filmmaker yang berdedikasi menciptakan karya visual menginspirasi
+                </p>
+              </div>
 
               <div className="flex gap-6 items-center flex-col sm:flex-row">
                 <a
                   className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center bg-white/[.15] text-white gap-3 hover:bg-white/[.25] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 shadow-md"
-                  href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/portofolio"
                 >
-                  <Image
-                    className="dark:invert"
-                    src="/vercel.svg"
-                    alt="Vercel logomark"
-                    width={24}
-                    height={24}
-                  />
-                  Deploy now
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 12L12 16L16 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 16V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Lihat Portfolio
                 </a>
                 <a
                   className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center hover:bg-white/[.15] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 w-full sm:w-auto text-white shadow-md"
-                  href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/contact"
                 >
-                  Read our docs
+                  Hubungi Kami
                 </a>
               </div>
             </main>
+            
+            {/* ScrollingJargon within Hero Section */}
+            <div className="absolute bottom-16 left-0 right-0 z-30">
+              <ScrolingJargon 
+                velocity={80}
+                damping={60}
+                stiffness={300}
+                numCopies={8}
+                velocityMapping={{ input: [0, 1000], output: [0, 3] }}
+                className="text-glow"
+              />
+            </div>
           </div>
-
-          {/* ScrollingJargon Section */}
-          <ScrolingJargon 
-            velocity={100}
-            damping={60}
-            stiffness={300}
-            numCopies={10}
-            velocityMapping={{ input: [0, 1000], output: [0, 4] }}
-            className="text-glow"
-          />
 
           {/* About Us Section - With MagicBento */}
           <section className="relative z-20 py-20 px-8 sm:px-20 bg-black">
