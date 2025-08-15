@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
+import Lenis from 'lenis';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import Opener from "./Layouts/Opener";
 import Background from "./Layouts/Background";
 import Navbar from "./Layouts/Navbar";
@@ -10,6 +12,8 @@ import ScrolingJargon from "./Layouts/ScrolingJargon";
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
+  const lenisRef = useRef();
+  const { scrollYProgress } = useScroll();
 
   const handleOpenerComplete = () => {
     // Delay untuk memberikan waktu transisi slide up ke main content
@@ -18,10 +22,50 @@ export default function Home() {
     }, 1000);
   };
 
+  // Initialize Lenis Smooth Scroll
+  useEffect(() => {
+    if (showMainContent) {
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        direction: 'vertical',
+        gestureDirection: 'vertical',
+        smooth: true,
+        mouseMultiplier: 1,
+        smoothTouch: false,
+        touchMultiplier: 2,
+        infinite: false,
+      });
+
+      lenisRef.current = lenis;
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+
+      return () => {
+        lenis.destroy();
+      };
+    }
+  }, [showMainContent]);
+
+  // Smooth scroll to section function
+  const scrollToSection = (target) => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(target, {
+        offset: 0,
+        duration: 2.5,
+        easing: (t) => 1 - Math.pow(1 - t, 3),
+      });
+    }
+  };
+
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
       {/* Navbar - Only show when main content is visible */}
-      {showMainContent && <Navbar />}
+      {showMainContent && <Navbar scrollToSection={scrollToSection} />}
       
       {/* Opener Component */}
       {!showMainContent && (
@@ -30,66 +74,117 @@ export default function Home() {
       
       {/* Main Content */}
       {showMainContent && (
-        <div className="relative z-10 animate-fade-in">
+        <motion.div 
+          className="relative z-10"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+        >
           
-          
-          {/* Hero Section with Background Beams */}
-          <div className="relative font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 pt-24">
-            {/* Background Beams - Only for Hero Section */}
-            <div className="absolute inset-0 overflow-hidden">
+          {/* SECTION 1: BERANDA - Hero dengan Film Roll Animation */}
+          <section id="beranda" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+            {/* Cinematic Background Effects */}
+            <div className="absolute inset-0">
               <Background 
-                beamWidth={5}
-                beamHeight={25}
-                beamNumber={30}
-                lightColor="#ffffff"
-                speed={5}
-                noiseIntensity={3}
-                scale={0.15}
-                rotation={52}
-              />
-            </div>
-            
-            {/* Content Overlay - Much lighter for better visibility */}
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" style={{ zIndex: 1 }} />
-            
-            <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start relative z-20">
-              <Image
-                className="dark:invert drop-shadow-2xl"
-                src="/Images/nolder-logo.png"
-                alt="Nolder Logo"
-                width={80}
-                height={80}
-                priority
+                beamWidth={3}
+                beamHeight={20}
+                beamNumber={25}
+                lightColor="#FFD700"
+                speed={3}
+                noiseIntensity={2}
+                scale={0.1}
+                rotation={45}
               />
               
-              <div className="text-center sm:text-left">
-                <h1 className="text-4xl sm:text-6xl font-bold text-white mb-4 drop-shadow-lg">
-                  NOL DERAJAT FILM
-                </h1>
-                <p className="text-lg sm:text-xl text-white/80 font-light leading-relaxed max-w-2xl">
-                  Komunitas filmmaker yang berdedikasi menciptakan karya visual menginspirasi
-                </p>
+              {/* Film Grain Overlay */}
+              <div className="absolute inset-0 opacity-40 mix-blend-multiply" 
+                   style={{
+                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                   }} 
+              />
+              
+              {/* Golden Light Leaks */}
+              <div className="absolute top-0 left-0 w-full h-full">
+                <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-radial from-yellow-400/20 via-yellow-600/10 to-transparent rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-radial from-yellow-300/15 via-yellow-500/8 to-transparent rounded-full blur-2xl animate-pulse delay-1000" />
               </div>
-
-              <div className="flex gap-6 items-center flex-col sm:flex-row">
-                <a
-                  className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center bg-white/[.15] text-white gap-3 hover:bg-white/[.25] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 shadow-md"
-                  href="/portofolio"
+            </div>
+            
+            {/* Content Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+            
+            {/* Hero Content */}
+            <div className="relative z-20 text-center px-8 sm:px-20">
+              {/* Logo dengan Golden Glow */}
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
+                className="mb-8"
+              >
+                <div className="relative inline-block">
+                  <Image
+                    className="drop-shadow-2xl filter brightness-110"
+                    src="/Images/nolder-logo.png"
+                    alt="Nolder Logo"
+                    width={120}
+                    height={120}
+                    priority
+                  />
+                  {/* Golden Glow Ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 blur-xl scale-150 animate-pulse" />
+                </div>
+              </motion.div>
+              
+              {/* Title dengan Cinematic Typography */}
+              <motion.h1 
+                className="text-5xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-400 mb-6 drop-shadow-2xl leading-tight tracking-wider"
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 1 }}
+              >
+                NOL DERAJAT FILM
+              </motion.h1>
+              
+              {/* Subtitle dengan Golden Accent */}
+              <motion.p 
+                className="text-xl sm:text-3xl text-gray-200 font-light leading-relaxed max-w-4xl mx-auto mb-8"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 1.5 }}
+              >
+                
+                Komunitas  <span className="text-yellow-400 font-semibold">Cinematography </span>  Universitas Brawijaya
+              </motion.p>
+              
+              {/* CTA Buttons dengan Premium Design */}
+              <motion.div 
+                className="flex gap-6 items-center justify-center flex-col sm:flex-row"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 2 }}
+              >
+                <button
+                  onClick={() => scrollToSection('#film')}
+                  className="group relative px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-full overflow-hidden shadow-2xl hover:shadow-yellow-400/50 transition-all duration-500 hover:scale-105"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 12L12 16L16 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 16V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Lihat Portfolio
-                </a>
-                <a
-                  className="rounded-full border-2 border-solid border-white/[.3] backdrop-blur-md transition-all duration-300 flex items-center justify-center hover:bg-white/[.15] hover:border-white/[.5] hover:shadow-lg font-semibold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 w-full sm:w-auto text-white shadow-md"
-                  href="/contact"
+                  <span className="relative z-10 flex items-center gap-3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 12h18m-9-9l9 9-9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Jelajahi Karya
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </button>
+                
+                <button
+                  onClick={() => scrollToSection('#about')}
+                  className="px-8 py-4 border-2 border-yellow-400/50 text-yellow-400 font-semibold rounded-full backdrop-blur-md hover:bg-yellow-400/10 hover:border-yellow-400 transition-all duration-500 hover:scale-105"
                 >
-                  Hubungi Kami
-                </a>
-              </div>
-            </main>
+                  Tentang Kami
+                </button>
+              </motion.div>
+            </div>
             
             {/* ScrollingJargon within Hero Section */}
             <div className="absolute bottom-16 left-0 right-0 z-30">
@@ -102,124 +197,244 @@ export default function Home() {
                 className="text-glow"
               />
             </div>
-          </div>
+          </section>
 
-          {/* About Us Section - With MagicBento */}
-          <section className="relative z-20 py-20 px-8 sm:px-20 bg-black">
-            <div className="max-w-6xl mx-auto">
+          {/* SECTION 2: ABOUT - Pengenalan dengan Timeline Parallax */}
+          <section id="about" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-black via-gray-900 to-black">
+            <div className="max-w-7xl mx-auto">
               {/* Section Header */}
-              <div className="text-center mb-16">
-                <h2 className="text-5xl sm:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+              <motion.div 
+                className="text-center mb-20"
+                initial={{ opacity: 0, y: 100 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 drop-shadow-lg tracking-wider">
                   ABOUT US
                 </h2>
-                <div className="w-24 h-1 bg-white mx-auto mb-8 opacity-80"></div>
-                <p className="text-xl sm:text-2xl text-white/80 font-light max-w-3xl mx-auto leading-relaxed">
-                  Kami adalah komunitas filmmaker yang berdedikasi untuk menciptakan karya-karya visual yang menginspirasi dan bermakna.
+                <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
+                <p className="text-xl sm:text-3xl text-gray-200 font-light max-w-5xl mx-auto leading-relaxed">
+                  Nol Derajat Film merupakan Unit Kegiatan Mahasiswa di Universitas Brawijaya Malang yang berfokus pada bidang sinematografi. 
+                  <br /><br />
+                  <span className="text-yellow-400 font-semibold">Sebagai wadah kreatif</span>, Nol Derajat Film merupakan tempat kolaboratif bagi seluruh anggotanya untuk berproses dan berkarya dalam beragam aspek perfilman.
                 </p>
+              </motion.div>
+
+              {/* AboutBentoLayout dengan Spacing */}
+              <div className="mb-20">
+                <AboutBentoLayout />
               </div>
+            </div>
+          </section>
 
-              {/* MagicBento Content Grid - Replacing the old grid */}
-              <AboutBentoLayout />
-
-              {/* Call to Action */}
-              <div className="text-center mt-20">
-                <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-md border border-white/30 rounded-2xl p-12 hover:from-white/25 hover:to-white/15 transition-all duration-300">
-                  <h3 className="text-4xl font-bold text-white mb-6">Mari Berkolaborasi</h3>
-                  <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-                    Punya ide kreatif atau proyek yang ingin diwujudkan? 
-                    Mari bergabung dengan kami untuk menciptakan karya yang luar biasa.
-                  </p>
-                  <div className="flex gap-4 justify-center flex-col sm:flex-row">
-                    <a
-                      href="/contact"
-                      className="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-semibold rounded-full hover:bg-white/90 transition-all duration-300 hover:scale-105 shadow-lg"
-                    >
-                      Hubungi Kami
-                    </a>
-                    <a
-                      href="/portofolio"
-                      className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-full hover:bg-white/10 hover:border-white/50 transition-all duration-300 hover:scale-105"
-                    >
-                      Lihat Portfolio
-                    </a>
+          {/* SECTION 3: KABINET - Tim CINEVERSO */}
+          <section id="kabinet" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
+            <div className="max-w-7xl mx-auto text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 100 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider">
+                  CINEVERSO
+                </h2>
+                <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-12" />
+                <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-3xl mx-auto mb-16">
+                  Tim kabinet yang memimpin visi kreatif dan menjalankan misi sinematik Nol Derajat Film
+                </p>
+                
+                {/* Placeholder untuk Kabinet Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500">
+                    <h3 className="text-2xl font-bold text-yellow-400 mb-4">Ketua</h3>
+                    <p className="text-gray-300">Leadership & Vision</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500">
+                    <h3 className="text-2xl font-bold text-yellow-400 mb-4">Wakil Ketua</h3>
+                    <p className="text-gray-300">Strategy & Operations</p>
                   </div>
                 </div>
+              </motion.div>
+            </div>
+          </section>
+
+          {/* SECTION 4: FILM - Galeri Poster Artistik */}
+          <section id="film" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-black via-gray-900 to-black">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                className="text-center mb-20"
+                initial={{ opacity: 0, y: 100 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider">
+                  KARYA FILM
+                </h2>
+                <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
+                <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-4xl mx-auto">
+                  Koleksi karya sinematik yang telah diproduksi dengan dedikasi tinggi dan visi artistik yang kuat
+                </p>
+              </motion.div>
+              
+              {/* Placeholder untuk Film Gallery */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[1, 2, 3, 4, 5, 6].map((item) => (
+                  <motion.div
+                    key={item}
+                    className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500 p-6 flex items-center justify-center"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1, delay: item * 0.1 }}
+                    viewport={{ once: true }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <span className="text-yellow-400 text-lg font-semibold">Film Poster {item}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 5: PORTFOLIO - Logo Partners */}
+          <section id="portfolio" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                className="text-center mb-20"
+                initial={{ opacity: 0, y: 100 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider">
+                  KOLABORASI
+                </h2>
+                <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
+                <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-4xl mx-auto">
+                  Partner dan kolaborator yang telah bersama kami menciptakan karya-karya sinematik berkualitas
+                </p>
+              </motion.div>
+              
+              {/* Partners Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                  <motion.div
+                    key={item}
+                    className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500 p-6 flex items-center justify-center"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1, delay: item * 0.1 }}
+                    viewport={{ once: true }}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <span className="text-yellow-400 text-sm font-semibold">Partner {item}</span>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </section>
 
           {/* Footer */}
-          <footer className="relative z-20 py-8 px-8 sm:px-20 bg-black">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex gap-[32px] flex-wrap items-center justify-center bg-black/20 p-6 rounded-lg backdrop-blur-sm">
-                <a
-                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
-                  href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Image
-                    aria-hidden
-                    src="/file.svg"
-                    alt="File icon"
-                    width={18}
-                    height={18}
-                    className="invert"
-                  />
-                  Learn
-                </a>
-                <a
-                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
-                  href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Image
-                    aria-hidden
-                    src="/window.svg"
-                    alt="Window icon"
-                    width={18}
-                    height={18}
-                    className="invert"
-                  />
-                  Examples
-                </a>
-                <a
-                  className="flex items-center gap-3 hover:underline hover:underline-offset-4 text-white/[.9] hover:text-white transition-all duration-300 font-medium text-base hover:scale-105"
-                  href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Image
-                    aria-hidden
-                    src="/globe.svg"
-                    alt="Globe icon"
-                    width={18}
-                    height={18}
-                    className="invert"
-                  />
-                  Go to nextjs.org →
-                </a>
+          <footer className="relative py-20 px-8 sm:px-20 bg-black border-t border-yellow-400/20">
+            <div className="max-w-7xl mx-auto text-center">
+              <div className="mb-8">
+                <Image
+                  src="/Images/nolder-logo.png"
+                  alt="Nolder Logo"
+                  width={60}
+                  height={60}
+                  className="mx-auto mb-4 opacity-80"
+                />
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">NOL DERAJAT FILM</h3>
+                <p className="text-gray-400">Unit Kegiatan Mahasiswa Universitas Brawijaya</p>
+              </div>
+              
+              <div className="border-t border-gray-800 pt-8">
+                <p className="text-gray-500 text-sm">
+                  © 2024 Nol Derajat Film. Semua hak cipta dilindungi. 
+                  <span className="text-yellow-400"> STOP DREAMING, START ACTION.</span>
+                </p>
               </div>
             </div>
           </footer>
-        </div>
+        </motion.div>
       )}
       
-      <style jsx>{`
+      {/* Custom CSS untuk Cinematic Effects */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        html {
+          scroll-behavior: auto;
+        }
+        
+        body {
+          font-family: 'Inter', sans-serif;
+          background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+        }
+        
+        .font-cinematic {
+          font-family: 'Cinzel', serif;
+        }
+        
+        .bg-gradient-radial {
+          background: radial-gradient(var(--tw-gradient-stops));
+        }
+        
+        .text-glow {
+          text-shadow: 
+            0 0 10px rgba(255, 212, 0, 0.5),
+            0 0 20px rgba(255, 212, 0, 0.3),
+            0 0 30px rgba(255, 212, 0, 0.2);
+        }
+        
         .animate-fade-in {
-          animation: fadeIn 1s ease-out;
+          animation: fadeIn 2s ease-out;
         }
         
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(50px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        
+        /* Film Grain Animation */
+        @keyframes grain {
+          0%, 100% { transform: translate(0, 0) }
+          10% { transform: translate(-5%, -10%) }
+          20% { transform: translate(-15%, 5%) }
+          30% { transform: translate(7%, -25%) }
+          40% { transform: translate(-5%, 25%) }
+          50% { transform: translate(-15%, 10%) }
+          60% { transform: translate(15%, 0%) }
+          70% { transform: translate(0%, 15%) }
+          80% { transform: translate(3%, 35%) }
+          90% { transform: translate(-10%, 10%) }
+        }
+        
+        .film-grain {
+          animation: grain 8s steps(10) infinite;
+        }
+        
+        /* Cinematic Glow Effects */
+        .golden-glow {
+          box-shadow: 
+            0 0 20px rgba(255, 212, 0, 0.3),
+            0 0 40px rgba(255, 212, 0, 0.2),
+            0 0 60px rgba(255, 212, 0, 0.1);
+        }
+        
+        /* Smooth Transitions */
+        * {
+          transition-property: all;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
       `}</style>
     </div>
