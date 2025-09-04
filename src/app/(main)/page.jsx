@@ -5,10 +5,9 @@ import Image from "next/image";
 import Lenis from 'lenis';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import Opener from "./Layouts/Opener";
-import Background from "./Layouts/Background";
 import Navbar from "./Layouts/Navbar";
 import AboutBentoLayout from "./Layouts/AboutBentoLayout";
-import ScrolingJargon from "./Layouts/ScrolingJargon";
+import Hero from "./Components/Hero";
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
@@ -81,123 +80,8 @@ export default function Home() {
           transition={{ duration: 1.5, ease: "easeOut" }}
         >
           
-          {/* SECTION 1: BERANDA - Hero dengan Film Roll Animation */}
-          <section id="beranda" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-            {/* Cinematic Background Effects */}
-            <div className="absolute inset-0">
-              <Background 
-                beamWidth={3}
-                beamHeight={20}
-                beamNumber={25}
-                lightColor="#FFD700"
-                speed={3}
-                noiseIntensity={2}
-                scale={0.1}
-                rotation={45}
-              />
-              
-              {/* Film Grain Overlay */}
-              <div className="absolute inset-0 opacity-40 mix-blend-multiply" 
-                   style={{
-                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                   }} 
-              />
-              
-              {/* Golden Light Leaks */}
-              <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-radial from-yellow-400/20 via-yellow-600/10 to-transparent rounded-full blur-3xl animate-pulse" />
-                <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-radial from-yellow-300/15 via-yellow-500/8 to-transparent rounded-full blur-2xl animate-pulse delay-1000" />
-              </div>
-            </div>
-            
-            {/* Content Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
-            
-            {/* Hero Content */}
-            <div className="relative z-20 text-center px-8 sm:px-20">
-              {/* Logo dengan Golden Glow */}
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
-                className="mb-8"
-              >
-                <div className="relative inline-block">
-                  <Image
-                    className="drop-shadow-2xl filter brightness-110"
-                    src="/Images/nolder-logo.png"
-                    alt="Nolder Logo"
-                    width={120}
-                    height={120}
-                    priority
-                  />
-                  {/* Golden Glow Ring */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 blur-xl scale-150 animate-pulse" />
-                </div>
-              </motion.div>
-              
-              {/* Title dengan Cinematic Typography */}
-              <motion.h1 
-                className="text-5xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-400 mb-6 drop-shadow-2xl leading-tight tracking-wider"
-                initial={{ opacity: 0, y: 100 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 1 }}
-              >
-                NOL DERAJAT FILM
-              </motion.h1>
-              
-              {/* Subtitle dengan Golden Accent */}
-              <motion.p 
-                className="text-xl sm:text-3xl text-gray-200 font-light leading-relaxed max-w-4xl mx-auto mb-8"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 1.5 }}
-              >
-                
-                Komunitas  <span className="text-yellow-400 font-semibold">Cinematography </span>  Universitas Brawijaya
-              </motion.p>
-              
-              {/* CTA Buttons dengan Premium Design */}
-              <motion.div 
-                className="flex gap-6 items-center justify-center flex-col sm:flex-row"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 2 }}
-              >
-                <button
-                  onClick={() => scrollToSection('#film')}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-full overflow-hidden shadow-2xl hover:shadow-yellow-400/50 transition-all duration-500 hover:scale-105"
-                >
-                  <span className="relative z-10 flex items-center gap-3">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 12h18m-9-9l9 9-9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Jelajahi Karya
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </button>
-                
-                <button
-                  onClick={() => scrollToSection('#about')}
-                  className="px-8 py-4 border-2 border-yellow-400/50 text-yellow-400 font-semibold rounded-full backdrop-blur-md hover:bg-yellow-400/10 hover:border-yellow-400 transition-all duration-500 hover:scale-105"
-                >
-                  Tentang Kami
-                </button>
-              </motion.div>
-            </div>
-            
-            {/* ScrollingJargon within Hero Section */}
-            <div className="absolute bottom-16 left-0 right-0 z-30">
-              <ScrolingJargon 
-                velocity={80}
-                damping={60}
-                stiffness={300}
-                numCopies={8}
-                velocityMapping={{ input: [0, 1000], output: [0, 3] }}
-                className="text-glow"
-              />
-            </div>
-          </section>
+          {/* SECTION 1: BERANDA - Hero Section */}
+          <Hero />
 
           {/* SECTION 2: ABOUT - Pengenalan dengan Timeline Parallax */}
           <section id="about" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-black via-gray-900 to-black">

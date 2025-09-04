@@ -1,158 +1,147 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 const Navbar = ({ scrollToSection }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setIsScrolled(scrollTop > 100); // Muncul setelah scroll 100px
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleKeyDown = (e, action) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  };
+
+  const navigationItems = [
+    { label: 'ABOUT', section: '#about' },
+    { label: 'FILM', section: '#film' },
+    { label: 'Our Kabinet', section: '#kabinet' },
+    { label: 'PROJECT', section: '#project' },
+    { label: 'CONTACT', section: '#contact' }
+  ];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="relative px-6 py-4">
-          {/* Background yang bisa hilang/muncul */}
-          <div className={`absolute inset-0 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl transition-all duration-700 ease-out transform ${
-            isScrolled 
-              ? 'opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}></div>
-          
-          {/* Content yang selalu terlihat */}
-          <div className="relative flex items-center justify-between">
-            
-            {/* Logo Section - Pojok Kiri */}
-            <Link href="/" className="flex items-center gap-3 group transition-all duration-300 hover:scale-105">
-              {/* Logo Kotak */}
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:from-white/30 group-hover:to-white/20 transition-all duration-300">
-                <Image 
-                  src="/Images/nolder-logo.png" 
-                  alt="Nolder Logo" 
-                  width={40} 
-                  height={40}
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              
-              {/* Text "Nol Derajat Film" */}
-              <div className="text-white font-bold text-lg tracking-wide">
-                NOL DERAJAT FILM
-              </div>
-            </Link>
-
-            {/* Desktop Navigation - Pojok Kanan */}
-            <div className="hidden md:flex items-center gap-8">
-              <button 
-                onClick={() => scrollToSection('#about')}
-                className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 hover:scale-105 relative group"
-              >
-                About
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
-              </button>
-              
-              <button 
-                onClick={() => scrollToSection('#kabinet')}
-                className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 hover:scale-105 relative group"
-              >
-                Kabinet
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
-              </button>
-              
-              <button 
-                onClick={() => scrollToSection('#film')}
-                className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 hover:scale-105 relative group"
-              >
-                Film
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
-              </button>
-              
-              <button 
-                onClick={() => scrollToSection('#portfolio')}
-                className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 hover:scale-105 relative group"
-              >
-                Portfolio
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={toggleMenu}
-              className="md:hidden p-2 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 transition-all duration-300"
-            >
-              <div className="w-6 h-6 flex flex-col justify-center items-center">
-                <span className={`block w-4 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-0.5' : '-translate-y-1'}`}></span>
-                <span className={`block w-4 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-                <span className={`block w-4 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-0.5' : 'translate-y-1'}`}></span>
-              </div>
-            </button>
+    <header className="fixed top-0 left-0 right-0 z-50 w-full py-6 mt-5">
+      <nav
+        className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 flex flex-col items-center"
+        role="navigation"
+        aria-label="Primary navigation"
+      >
+        {/* Brand Section */}
+        <Link
+          href="/"
+          className="flex items-center gap-3 mb-4 outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg transition-opacity duration-300 hover:opacity-70"
+          aria-label="NOL DERAJAT FILM, Home"
+        >
+          {/* Film Icon using existing logo */}
+          <div className="h-8 w-8 flex items-center justify-center">
+            <Image 
+              src="/Images/nolder-logo.png" 
+              alt="Nolder Logo" 
+              width={32} 
+              height={32}
+              className="object-contain opacity-90"
+              priority
+            />
           </div>
+          <span className="text-[18px] sm:text-[20px] font-semibold tracking-wide leading-none text-white">
+            NOL DERAJAT FILM
+          </span>
+        </Link>
 
-          {/* Mobile Navigation Menu */}
-          <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-60 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-            <div className="pt-4 border-t border-white/20">
-              <div className="flex flex-col gap-4">
-                <button 
-                  onClick={() => {
-                    scrollToSection('#about');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-white/10 text-left"
+        {/* Desktop Navigation Menu */}
+        <div className="hidden md:block">
+          <div className="rounded-full border border-white/20 bg-white/5 backdrop-blur px-0 py-0 inline-flex">
+            {navigationItems.map((item, index) => (
+              <React.Fragment key={item.section}>
+                <button
+                  onClick={() => scrollToSection(item.section)}
+                  onKeyDown={(e) => handleKeyDown(e, () => scrollToSection(item.section))}
+                  className="px-5 py-2 text-[14px] sm:text-[15px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-opacity duration-300 ease-in-out min-h-[44px] flex items-center"
+                  aria-label={`Navigate to ${item.label} section`}
                 >
-                  About
+                  {item.label}
                 </button>
-                
-                <button 
-                  onClick={() => {
-                    scrollToSection('#kabinet');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-white/10 text-left"
-                >
-                  Kabinet
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    scrollToSection('#film');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-white/10 text-left"
-                >
-                  Film
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    scrollToSection('#portfolio');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-white/80 hover:text-yellow-400 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-white/10 text-left"
-                >
-                  Portfolio
-                </button>
-              </div>
-            </div>
+                {index < navigationItems.length - 1 && (
+                  <span className="px-3 text-white/30" aria-hidden="true"></span>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </div>
-      </div>
-    </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={toggleMenu}
+          onKeyDown={(e) => handleKeyDown(e, toggleMenu)}
+          className="md:hidden absolute top-6 right-4 sm:right-6 lg:right-8 p-3 rounded-md bg-white/5 hover:bg-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-transparent min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-menu"
+        >
+          <div className="w-6 h-6 flex flex-col justify-center items-center">
+            <span 
+              className={`block w-5 h-0.5 bg-white transition-all duration-300 ${
+                isMenuOpen ? 'rotate-45 translate-y-0.5' : '-translate-y-1.5'
+              }`}
+              aria-hidden="true"
+            />
+            <span 
+              className={`block w-5 h-0.5 bg-white transition-all duration-300 ${
+                isMenuOpen ? 'opacity-0' : 'opacity-100'
+              }`}
+              aria-hidden="true"
+            />
+            <span 
+              className={`block w-5 h-0.5 bg-white transition-all duration-300 ${
+                isMenuOpen ? '-rotate-45 -translate-y-0.5' : 'translate-y-1.5'
+              }`}
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+
+        {/* Mobile Navigation Menu */}
+        <div 
+          id="mobile-menu"
+          className={`md:hidden w-full transition-all duration-300 ease-in-out overflow-hidden ${
+            isMenuOpen ? 'max-h-80 opacity-100 mt-4' : 'max-h-0 opacity-0'
+          }`}
+          aria-hidden={!isMenuOpen}
+        >
+          <div className="rounded-2xl border border-white/20 bg-white/5 backdrop-blur p-4">
+            <ul className="flex flex-col gap-2" role="menu">
+              {navigationItems.map((item) => (
+                <li key={item.section} role="none">
+                  <button 
+                    onClick={() => {
+                      scrollToSection(item.section);
+                      setIsMenuOpen(false);
+                    }}
+                    onKeyDown={(e) => handleKeyDown(e, () => {
+                      scrollToSection(item.section);
+                      setIsMenuOpen(false);
+                    })}
+                    className="w-full text-center px-5 py-3 text-[14px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-opacity duration-300 ease-in-out min-h-[44px] flex items-center justify-center"
+                    role="menuitem"
+                    tabIndex={isMenuOpen ? 0 : -1}
+                    aria-label={`Navigate to ${item.label} section`}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
   );
 };
 
