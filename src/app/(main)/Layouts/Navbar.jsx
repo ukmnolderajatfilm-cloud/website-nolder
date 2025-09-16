@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ContactModal from '../Components/ContactModal';
 
 const Navbar = ({ scrollToSection }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -19,12 +21,20 @@ const Navbar = ({ scrollToSection }) => {
   };
 
   const navigationItems = [
-    { label: 'ABOUT', section: '#about' },
-    { label: 'FILM', section: '#film' },
-    { label: 'Our Kabinet', section: '#kabinet' },
-    { label: 'PROJECT', section: '#project' },
-    { label: 'CONTACT', section: '#contact' }
+    { label: 'ABOUT', section: '#about', action: 'scroll' },
+    { label: 'FILM', section: '#film', action: 'scroll' },
+    { label: 'Our Kabinet', section: '#kabinet', action: 'scroll' },
+    { label: 'PROJECT', section: '#project', action: 'scroll' },
+    { label: 'CONTACT', section: '#contact', action: 'modal' }
   ];
+
+  const handleNavigation = (item) => {
+    if (item.action === 'modal') {
+      setIsContactModalOpen(true);
+    } else {
+      scrollToSection(item.section);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full py-6 mt-5">
@@ -61,12 +71,19 @@ const Navbar = ({ scrollToSection }) => {
             {navigationItems.map((item, index) => (
               <React.Fragment key={item.section}>
                 <button
-                  onClick={() => scrollToSection(item.section)}
-                  onKeyDown={(e) => handleKeyDown(e, () => scrollToSection(item.section))}
-                  className="px-5 py-2 text-[14px] sm:text-[15px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-opacity duration-300 ease-in-out min-h-[44px] flex items-center"
-                  aria-label={`Navigate to ${item.label} section`}
+                  onClick={() => handleNavigation(item)}
+                  onKeyDown={(e) => handleKeyDown(e, () => handleNavigation(item))}
+                  className={`px-5 py-2 text-[14px] sm:text-[15px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-all duration-300 ease-in-out min-h-[44px] flex items-center ${
+                    item.action === 'modal' ? 'hover:text-blue-400 hover:shadow-lg hover:shadow-blue-500/20' : ''
+                  }`}
+                  aria-label={item.action === 'modal' ? `Open ${item.label} modal` : `Navigate to ${item.label} section`}
                 >
                   {item.label}
+                  {item.action === 'modal' && (
+                    <svg className="w-4 h-4 ml-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  )}
                 </button>
                 {index < navigationItems.length - 1 && (
                   <span className="px-3 text-white/30" aria-hidden="true"></span>
@@ -121,19 +138,26 @@ const Navbar = ({ scrollToSection }) => {
                 <li key={item.section} role="none">
                   <button 
                     onClick={() => {
-                      scrollToSection(item.section);
+                      handleNavigation(item);
                       setIsMenuOpen(false);
                     }}
                     onKeyDown={(e) => handleKeyDown(e, () => {
-                      scrollToSection(item.section);
+                      handleNavigation(item);
                       setIsMenuOpen(false);
                     })}
-                    className="w-full text-center px-5 py-3 text-[14px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-opacity duration-300 ease-in-out min-h-[44px] flex items-center justify-center"
+                    className={`w-full text-center px-5 py-3 text-[14px] uppercase tracking-wide text-white/90 hover:opacity-70 focus-visible:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-md transition-all duration-300 ease-in-out min-h-[44px] flex items-center justify-center ${
+                      item.action === 'modal' ? 'hover:text-blue-400' : ''
+                    }`}
                     role="menuitem"
                     tabIndex={isMenuOpen ? 0 : -1}
-                    aria-label={`Navigate to ${item.label} section`}
+                    aria-label={item.action === 'modal' ? `Open ${item.label} modal` : `Navigate to ${item.label} section`}
                   >
                     {item.label}
+                    {item.action === 'modal' && (
+                      <svg className="w-4 h-4 ml-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    )}
                   </button>
                 </li>
               ))}
@@ -141,6 +165,12 @@ const Navbar = ({ scrollToSection }) => {
           </div>
         </div>
       </nav>
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onClose={() => setIsContactModalOpen(false)} 
+      />
     </header>
   );
 };

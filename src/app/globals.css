@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Import component styles */
+@import "./styles/components/index.css";
+
 @custom-variant dark (&:is(.dark *));
 
 body {
@@ -26,6 +29,13 @@ body {
       0 0 40px rgba(255, 212, 0, 0.2),
       0 0 60px rgba(255, 212, 0, 0.1);
   }
+
+  /* Custom shadow untuk ProfileCard */
+  .shadow-soft {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Removed complex gradient - now using simple Tailwind shadows */
 }
 
 /* Film Grain Animation */

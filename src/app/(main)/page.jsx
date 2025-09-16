@@ -8,9 +8,13 @@ import Opener from "./Layouts/Opener";
 import Navbar from "./Layouts/Navbar";
 import AboutBentoLayout from "./Layouts/AboutBentoLayout";
 import Hero from "./Components/Hero";
+import ProfileCard from "./Components/ProfileCard";
+import CabinetCarousel from "./Components/CabinetCarousel";
+import PartnershipModal from "./Components/PartnershipModal";
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
+  const [isPartnershipModalOpen, setIsPartnershipModalOpen] = useState(false);
   const lenisRef = useRef();
   const { scrollYProgress } = useScroll();
 
@@ -62,7 +66,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
+    <div className="relative min-h-screen">
       {/* Navbar - Only show when main content is visible */}
       {showMainContent && <Navbar scrollToSection={scrollToSection} />}
       
@@ -83,8 +87,9 @@ export default function Home() {
           {/* SECTION 1: BERANDA - Hero Section */}
           <Hero />
 
+
           {/* SECTION 2: ABOUT - Pengenalan dengan Timeline Parallax */}
-          <section id="about" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-black via-gray-900 to-black">
+          <section id="about" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto">
               {/* Section Header */}
               <motion.div 
@@ -112,8 +117,9 @@ export default function Home() {
             </div>
           </section>
 
+
           {/* SECTION 3: KABINET - Tim CINEVERSO */}
-          <section id="kabinet" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
+          <section id="kabinet" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto text-center">
               <motion.div
                 initial={{ opacity: 0, y: 100 }}
@@ -129,23 +135,15 @@ export default function Home() {
                   Tim kabinet yang memimpin visi kreatif dan menjalankan misi sinematik Nol Derajat Film
                 </p>
                 
-                {/* Placeholder untuk Kabinet Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500">
-                    <h3 className="text-2xl font-bold text-yellow-400 mb-4">Ketua</h3>
-                    <p className="text-gray-300">Leadership & Vision</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500">
-                    <h3 className="text-2xl font-bold text-yellow-400 mb-4">Wakil Ketua</h3>
-                    <p className="text-gray-300">Strategy & Operations</p>
-                  </div>
-                </div>
+                {/* Futuristic Cabinet Carousel */}
+                <CabinetCarousel />
               </motion.div>
             </div>
           </section>
 
+
           {/* SECTION 4: FILM - Galeri Poster Artistik */}
-          <section id="film" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-black via-gray-900 to-black">
+          <section id="film" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto">
               <motion.div
                 className="text-center mb-20"
@@ -182,8 +180,9 @@ export default function Home() {
             </div>
           </section>
 
+
           {/* SECTION 5: PORTFOLIO - Logo Partners */}
-          <section id="portfolio" className="relative py-32 px-8 sm:px-20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
+          <section id="portfolio" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto">
               <motion.div
                 className="text-center mb-20"
@@ -202,7 +201,7 @@ export default function Home() {
               </motion.div>
               
               {/* Partners Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
                   <motion.div
                     key={item}
@@ -217,11 +216,52 @@ export default function Home() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Partnership CTA */}
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                viewport={{ once: true }}
+              >
+                <button
+                  onClick={() => setIsPartnershipModalOpen(true)}
+                  className="group relative px-12 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 rounded-2xl font-bold text-black text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/25 overflow-hidden"
+                >
+                  {/* Button Background Animation */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Button Content */}
+                  <div className="relative flex items-center space-x-3">
+                    <span>START PARTNERSHIP</span>
+                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+
+                  {/* Corner Accents */}
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-yellow-600 rounded-tl-2xl opacity-50" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-orange-600 rounded-br-2xl opacity-50" />
+                </button>
+                
+                <motion.p 
+                  className="text-gray-400 text-sm mt-4 max-w-md mx-auto"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.7 }}
+                  viewport={{ once: true }}
+                >
+                  Bergabunglah dengan kami untuk menciptakan karya sinematik yang menginspirasi dan berkualitas tinggi
+                </motion.p>
+              </motion.div>
             </div>
           </section>
 
+
           {/* Footer */}
-          <footer className="relative py-20 px-8 sm:px-20 bg-black border-t border-yellow-400/20">
+          {/* Footer */}
+          <footer className="relative py-20 px-8 sm:px-20 border-t border-yellow-400/20">
             <div className="max-w-7xl mx-auto text-center">
               <div className="mb-8">
                 <Image
@@ -245,6 +285,12 @@ export default function Home() {
           </footer>
         </motion.div>
       )}
+
+      {/* Partnership Modal */}
+      <PartnershipModal 
+        isOpen={isPartnershipModalOpen} 
+        onClose={() => setIsPartnershipModalOpen(false)} 
+      />
       
       {/* Custom CSS untuk Cinematic Effects */}
       <style jsx global>{`
@@ -256,7 +302,7 @@ export default function Home() {
         
         body {
           font-family: 'Inter', sans-serif;
-          background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+          background: #000000;
         }
         
         .font-cinematic {
@@ -289,7 +335,7 @@ export default function Home() {
           }
         }
         
-        /* Film Grain Animation */
+        /* Film Grain Animation - Enhanced */
         @keyframes grain {
           0%, 100% { transform: translate(0, 0) }
           10% { transform: translate(-5%, -10%) }
@@ -305,6 +351,142 @@ export default function Home() {
         
         .film-grain {
           animation: grain 8s steps(10) infinite;
+        }
+
+        /* Hero spotlight animation */
+        @keyframes spotlight {
+          0%, 100% { 
+            transform: translate(0%, 0%) scale(1);
+            opacity: 0.25;
+          }
+          25% { 
+            transform: translate(10%, -5%) scale(1.1);
+            opacity: 0.3;
+          }
+          50% { 
+            transform: translate(-5%, 10%) scale(0.9);
+            opacity: 0.2;
+          }
+          75% { 
+            transform: translate(-10%, -10%) scale(1.05);
+            opacity: 0.35;
+          }
+        }
+
+        /* Seamless Royal Blue Continuous Background - Enhanced Contrast */
+        body {
+          background: 
+            linear-gradient(
+              180deg,
+              #000000 0%,           /* Hero - Deep black start */
+              #0f0f2a 15%,          /* Hero to About - Stronger dark royal blue */
+              #1f1f4a 35%,          /* About to Kabinet - Enhanced medium royal blue */
+              #2f2f6a 55%,          /* Kabinet to Film - Richer royal blue */
+              #3f3f8a 75%,          /* Film to Portfolio - Much deeper royal blue */
+              #1f1f4a 90%,          /* Portfolio to Footer - Return to enhanced medium */
+              #000000 100%          /* Footer - Deep black end */
+            ),
+            radial-gradient(
+              ellipse at center,
+              rgba(100, 100, 255, 0.12) 0%,  /* Stronger royal blue accent glow */
+              rgba(80, 120, 255, 0.08) 30%,  /* Added mid-range blue glow */
+              transparent 70%
+            );
+          background-attachment: fixed;
+          background-size: 100% 600vh, 100% 100%;
+          min-height: 100vh;
+        }
+        
+        /* Ensure seamless flow */
+        html, body {
+          background-color: #000000;
+          overflow-x: hidden;
+        }
+
+        /* Enhanced Section Continuity */
+        section {
+          position: relative;
+          background: transparent;
+          backdrop-filter: blur(0.3px);
+        }
+
+        /* Subtle section depth without breaking continuity */
+        section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(
+            ellipse at center,
+            transparent 30%,
+            rgba(0, 0, 0, 0.05) 70%,
+            rgba(0, 0, 0, 0.15) 100%
+          );
+          pointer-events: none;
+          z-index: -1;
+          opacity: 0.8;
+        }
+
+        /* Hero section - minimal overlay to blend with its own effects */
+        section:first-of-type::before {
+          background: radial-gradient(
+            ellipse at center,
+            transparent 50%,
+            rgba(0, 0, 0, 0.03) 80%,
+            rgba(0, 0, 0, 0.08) 100%
+          );
+          opacity: 0.6;
+        }
+
+        /* Footer section - subtle bottom fade */
+        footer::before {
+          background: linear-gradient(
+            180deg,
+            transparent 0%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.3) 100%
+          );
+        }
+
+        /* Enhanced Royal Blue Cinematic film grain - Stronger overlay */
+        body::after {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: 
+            radial-gradient(circle at 25% 25%, rgba(140, 140, 255, 0.04) 1px, transparent 1px),
+            radial-gradient(circle at 75% 75%, rgba(120, 120, 255, 0.03) 1px, transparent 1px),
+            radial-gradient(circle at 50% 10%, rgba(100, 100, 255, 0.025) 1px, transparent 1px);
+          background-size: 60px 60px, 80px 80px, 100px 100px;
+          opacity: 0.15;  /* Increased opacity for more visibility */
+          animation: grain 30s linear infinite;
+          pointer-events: none;
+          z-index: 1;
+          mix-blend-mode: screen;
+        }
+
+        /* Enhanced royal blue vignette effect - Stronger contrast */
+        html::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(
+            ellipse at center,
+            transparent 20%,
+            rgba(10, 10, 25, 0.5) 60%,    /* Stronger blue-tinted vignette */
+            rgba(15, 15, 35, 0.7) 80%,    /* Enhanced royal blue tint */
+            rgba(5, 5, 15, 0.9) 100%      /* Deeper blue-black edge */
+          );
+          pointer-events: none;
+          z-index: 2;
         }
         
         /* Cinematic Glow Effects */

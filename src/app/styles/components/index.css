@@ -1,0 +1,9 @@
+/**
+ * Component Styles Index
+ * Central import file for all component-specific styles
+ * Following clean CSS architecture principles
+ */
+
+/* Import component styles */
+@import './profile-card.css';
+

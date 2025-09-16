@@ -1,35 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
-import BlurText from '../Components/BlurText/BlurText';
+import React, { useState, useEffect } from 'react';
+import SplitText from '../Components/SplitText';
 
 const Opener = ({ onAnimationComplete }) => {
+  const [showText, setShowText] = useState(false);
   const [allAnimationsComplete, setAllAnimationsComplete] = useState(false);
 
-  const handleSecondLineComplete = () => {
-    // Delay 5 detik agar user bisa melihat tulisan dengan jelas
+  useEffect(() => {
+    console.log('Opener component mounted');
+    
+    // Show text immediately when component mounts
+    setShowText(true);
+    console.log('Text should be visible now');
+  }, []);
+
+  const handleSplitTextComplete = () => {
+    console.log('SplitText animation completed');
+    
+    // Wait 3 seconds after text animation completes, then slide up
     setTimeout(() => {
+      console.log('Starting slide up animation');
       setAllAnimationsComplete(true);
-      // Delay tambahan untuk slide up animation
+      
+      // After slide up animation completes, call onAnimationComplete
       setTimeout(() => {
+        console.log('Calling onAnimationComplete');
         if (onAnimationComplete) {
           onAnimationComplete();
         }
-      }, 1000);
-    }, 1000);
+      }, 1000); // 1 second for slide up animation
+    }, 3000); // 3 seconds display time after animation
   };
 
   return (
     <div className={`opener-container ${allAnimationsComplete ? 'slide-up' : ''}`}>
       <div className="content">
-        <BlurText
-          text="STOP DREAMING START ACTION !!!"
-          delay={200}
-          animateBy="words"
-          direction="top"
-          onAnimationComplete={handleSecondLineComplete}
-          className="text-7xl main-text"
-        />
+        {showText && (
+          <SplitText
+            text="STOP DREAMING START ACTION !!!"
+            delay={150}
+            duration={0.8}
+            ease="power3.out"
+            splitType="words"
+            from={{ opacity: 0, y: 50 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0}
+            textAlign="center"
+            tag="h1"
+            onLetterAnimationComplete={handleSplitTextComplete}
+            className="main-text"
+          />
+        )}
       </div>
       
       <style jsx>{`
@@ -41,7 +63,10 @@ const Opener = ({ onAnimationComplete }) => {
           justify-content: center;
           align-items: center;
           overflow: hidden;
-          position: relative;
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 9999;
           transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -61,69 +86,42 @@ const Opener = ({ onAnimationComplete }) => {
         }
         
         .main-text {
-          font-size: 1000px ;
-          font-weight: 950 ;
+          font-size: 5rem ;
+          font-weight: 800 ;
           color: #ffffff ;
-          text-shadow: 
-            0 0 10px rgba(255, 255, 255, 0.8),
-            0 0 20px rgba(255, 255, 255, 0.6),
-            0 0 30px rgba(255, 255, 255, 0.4),
-            0 0 40px rgba(255, 255, 255, 0.2) ;
           margin: 0 ;
           padding: 0.1em 0 ;
-          letter-spacing: 0.02em ;
-          line-height: 0.9 ;
+          letter-spacing: 0.05em ;
+          line-height: 1.1 ;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif ;
-          animation: glow 3s ease-in-out infinite alternate ;
+          text-align: center;
           transform: translateZ(0);
-          will-change: text-shadow;
+          width: 100%;
         }
         
-        .main-text span {
-          color: #ffffff ;
-          text-shadow: 
-            0 0 10px rgba(255, 255, 255, 0.8),
-            0 0 20px rgba(255, 255, 255, 0.6),
-            0 0 30px rgba(255, 255, 255, 0.4),
-            0 0 40px rgba(255, 255, 255, 0.2) ;
-          transition: all 0.3s ease-out;
+        .main-text .split-word {
+          display: inline-block;
+          margin-right: 0.3em;
+          color: #ffffff;
         }
         
-        @keyframes glow {
-          0% {
-            text-shadow: 
-              0 0 10px rgba(255, 255, 255, 0.8),
-              0 0 20px rgba(255, 255, 255, 0.6),
-              0 0 30px rgba(255, 255, 255, 0.4),
-              0 0 40px rgba(255, 255, 255, 0.2) ;
-          }
-          50% {
-            text-shadow: 
-              0 0 20px rgba(255, 255, 255, 1),
-              0 0 30px rgba(255, 255, 255, 0.9),
-              0 0 40px rgba(255, 255, 255, 0.7),
-              0 0 50px rgba(255, 255, 255, 0.5) ;
-          }
-          100% {
-            text-shadow: 
-              0 0 15px rgba(255, 255, 255, 1),
-              0 0 25px rgba(255, 255, 255, 0.8),
-              0 0 35px rgba(255, 255, 255, 0.6),
-              0 0 45px rgba(255, 255, 255, 0.4) ;
-          }
+        .main-text .split-char {
+          display: inline-block;
+          color: #ffffff;
         }
         
         @media (max-width: 768px) {
           .main-text {
-            font-size: 70px ;
-            line-height: 0.8 ;
+            font-size: 3rem ;
+            line-height: 1 ;
           }
         }
         
         @media (max-width: 480px) {
           .main-text {
-            font-size: 50px ;
-            letter-spacing: 0.01em ;
+            font-size: 2rem ;
+            letter-spacing: 0.03em ;
+            line-height: 1.1 ;
           }
         }
       `}</style>
