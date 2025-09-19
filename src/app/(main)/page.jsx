@@ -10,11 +10,19 @@ import AboutBentoLayout from "./Layouts/AboutBentoLayout";
 import Hero from "./Components/Hero";
 import ProfileCard from "./Components/ProfileCard";
 import CabinetCarousel from "./Components/CabinetCarousel";
-import PartnershipModal from "./Components/PartnershipModal";
+import CardSwap, { Card } from "./Components/CardSwap";
+import CircularGallery from "./Components/CircularGalery";
+
+// Dynamic import untuk TrailerModal
+import dynamic from 'next/dynamic';
+
+const TrailerModal = dynamic(() => import("./Components/TrailerModal"), {
+  ssr: false
+});
 
 export default function Home() {
   const [showMainContent, setShowMainContent] = useState(false);
-  const [isPartnershipModalOpen, setIsPartnershipModalOpen] = useState(false);
+  const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const lenisRef = useRef();
   const { scrollYProgress } = useScroll();
 
@@ -141,18 +149,104 @@ export default function Home() {
             </div>
           </section>
 
-
           {/* SECTION 4: FILM - Galeri Poster Artistik */}
           <section id="film" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto">
               <motion.div
-                className="text-center mb-20"
+                className="text-center mb-20 relative"
                 initial={{ opacity: 0, y: 100 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider">
+                {/* CardSwap Left Side (Mirrored) - Behind H2 */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl" style={{ transform: 'scaleX(-1)' }}>
+                  <div style={{ height: '500px', position: 'relative' }}>
+                    <CardSwap
+                      width={280}
+                      height={400}
+                      cardDistance={60}
+                      verticalDistance={70}
+                      delay={4500}
+                      pauseOnHover={false}
+                    >
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          style={{ transform: 'scaleX(-1)' }}
+                          loading="lazy"
+                        />
+                      </Card>
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          style={{ transform: 'scaleX(-1)' }}
+                          loading="lazy"
+                        />
+                      </Card>
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          style={{ transform: 'scaleX(-1)' }}
+                          loading="lazy"
+                        />
+                      </Card>
+                    </CardSwap>
+                  </div>
+                </div>
+
+                {/* CardSwap Right Side - Behind H2 */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl">
+                  <div style={{ height: '500px', position: 'relative' }}>
+                    <CardSwap
+                      width={280}
+                      height={400}
+                      cardDistance={60}
+                      verticalDistance={70}
+                      delay={6000}
+                      pauseOnHover={false}
+                    >
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          loading="lazy"
+                        />
+                      </Card>
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          loading="lazy"
+                        />
+                      </Card>
+                      <Card>
+                        <Image
+                          src="/Images/poster-film/TBFSP.jpg"
+                          alt="Film Poster"
+                          fill
+                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                          loading="lazy"
+                        />
+                      </Card>
+                    </CardSwap>
+                  </div>
+                </div>
+
+                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider relative z-10">
                   KARYA FILM
                 </h2>
                 <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
@@ -161,22 +255,77 @@ export default function Home() {
                 </p>
               </motion.div>
               
-              {/* Placeholder untuk Film Gallery */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                  <motion.div
-                    key={item}
-                    className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500 p-6 flex items-center justify-center"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: item * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <span className="text-yellow-400 text-lg font-semibold">Film Poster {item}</span>
-                  </motion.div>
-                ))}
+              {/* CircularGallery - Film Poster Showcase */}
+              <div className="relative z-10 w-full h-[600px] sm:h-[700px]">
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  viewport={{ once: true }}
+                  className="w-full h-full"
+                >
+                  <CircularGallery
+                    items={[
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Film Poster' },
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Nol Derajat' },
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Cinema' },
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Production' },
+                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Showcase' }
+                    ]}
+                    bend={2}
+                    textColor="#fbbf24"
+                    borderRadius={0.08}
+                    font="bold 24px Inter"
+                    scrollSpeed={1.5}
+                    scrollEase={0.08}
+                    autoScroll={false}
+                    onItemClick={() => setIsTrailerModalOpen(true)}
+                  />
+                </motion.div>
               </div>
+
+              {/* All Film Button */}
+              <motion.div
+                className="relative z-10 text-center mt-16"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                viewport={{ once: true }}
+              >
+                <button
+                  onClick={() => window.location.href = '/gallery'}
+                  className="group relative px-10 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 rounded-2xl font-bold text-black text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/25 overflow-hidden"
+                >
+                  {/* Button Background Animation */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Button Content */}
+                  <div className="relative flex items-center space-x-3">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>ALL FILM</span>
+                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+
+                  {/* Corner Accents */}
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-yellow-600 rounded-tl-2xl opacity-50" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-orange-600 rounded-br-2xl opacity-50" />
+                </button>
+                
+                <motion.p 
+                  className="text-gray-400 text-sm mt-4 max-w-md mx-auto"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                  viewport={{ once: true }}
+                >
+                  Jelajahi koleksi lengkap karya sinematik Nol Derajat Film
+                </motion.p>
+              </motion.div>
             </div>
           </section>
 
@@ -217,44 +366,6 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Partnership CTA */}
-              <motion.div
-                className="text-center"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.5 }}
-                viewport={{ once: true }}
-              >
-                <button
-                  onClick={() => setIsPartnershipModalOpen(true)}
-                  className="group relative px-12 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 rounded-2xl font-bold text-black text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/25 overflow-hidden"
-                >
-                  {/* Button Background Animation */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Button Content */}
-                  <div className="relative flex items-center space-x-3">
-                    <span>START PARTNERSHIP</span>
-                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </div>
-
-                  {/* Corner Accents */}
-                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-yellow-600 rounded-tl-2xl opacity-50" />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-orange-600 rounded-br-2xl opacity-50" />
-                </button>
-                
-                <motion.p 
-                  className="text-gray-400 text-sm mt-4 max-w-md mx-auto"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.7 }}
-                  viewport={{ once: true }}
-                >
-                  Bergabunglah dengan kami untuk menciptakan karya sinematik yang menginspirasi dan berkualitas tinggi
-                </motion.p>
-              </motion.div>
             </div>
           </section>
 
@@ -270,6 +381,7 @@ export default function Home() {
                   width={60}
                   height={60}
                   className="mx-auto mb-4 opacity-80"
+                  loading="lazy"
                 />
                 <h3 className="text-2xl font-bold text-yellow-400 mb-2">NOL DERAJAT FILM</h3>
                 <p className="text-gray-400">Unit Kegiatan Mahasiswa Universitas Brawijaya</p>
@@ -286,10 +398,11 @@ export default function Home() {
         </motion.div>
       )}
 
-      {/* Partnership Modal */}
-      <PartnershipModal 
-        isOpen={isPartnershipModalOpen} 
-        onClose={() => setIsPartnershipModalOpen(false)} 
+      {/* Trailer Modal */}
+      <TrailerModal 
+        isOpen={isTrailerModalOpen} 
+        onClose={() => setIsTrailerModalOpen(false)}
+        videoId="R37-EC48yoc"
       />
       
       {/* Custom CSS untuk Cinematic Effects */}
