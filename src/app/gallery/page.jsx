@@ -4,6 +4,7 @@ import React, { useState, useEffect, lazy, Suspense, useMemo, useCallback } from
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from 'framer-motion';
+import DomeGalery from '../(main)/Components/DomeGalery';
 
 const TrailerModal = lazy(() => import("../(main)/Components/TrailerModal"));
 
@@ -127,10 +128,44 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Background Effects */}
-      <div className="fixed inset-0 bg-gradient-to-br from-black via-gray-900 to-black" />
-      
+    <div className="min-h-screen bg-black relative">
+      {/* DomeGalery Background */}
+      <div className="fixed inset-0 z-0">
+        <DomeGalery 
+          images={[
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'TBFSP' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Cinema Verite' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Urban Symphony' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Midnight Stories' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Golden Hour' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Retrospective' },
+            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Frame by Frame' }
+          ]}
+          fit={0.7}
+          minRadius={800}
+          maxRadius={1200}
+          dragSensitivity={15}
+          openedImageWidth="600px"
+          openedImageHeight="800px"
+          imageBorderRadius="20px"
+          openedImageBorderRadius="20px"
+          grayscale={true}
+          overlayBlurColor="#000000"
+        />
+      </div>
+
+      {/* Gradient Overlay for better readability */}
+      <div className="fixed inset-0 z-[1]">
+        {/* Top gradient */}
+        <div className="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-black/90 via-black/50 to-transparent" />
+        {/* Bottom gradient */}
+        <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+        {/* Center subtle overlay */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)'
+        }} />
+      </div>
+
       {/* Header */}
       <header className="relative z-10 pt-20 pb-16 px-8 sm:px-20">
         <div className="max-w-7xl mx-auto">
@@ -154,17 +189,16 @@ export default function GalleryPage() {
 
           {/* Title */}
           <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-center"
           >
-            <h1 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-6 tracking-wider">
-              FILM GALLERY
+            <h1 className="text-5xl md:text-6xl font-bold text-yellow-400 mb-4">
+              Karya Film
             </h1>
-            <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
-            <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-4xl mx-auto">
-              Koleksi lengkap karya sinematik Nol Derajat Film
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Koleksi film-film terbaik dari Nolder Film Production
             </p>
           </motion.div>
         </div>
@@ -172,7 +206,7 @@ export default function GalleryPage() {
 
       {/* Film Grid */}
       <main className="relative z-10 px-8 sm:px-20 pb-20">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto relative">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {memoizedFilms.map((film, index) => (
               <motion.div
@@ -184,7 +218,7 @@ export default function GalleryPage() {
                 onClick={() => handlePosterClick(film)}
               >
                 {/* Poster Card */}
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-yellow-400/20 group-hover:border-yellow-400/40 transition-all duration-500">
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-black/40 backdrop-blur-md border border-yellow-400/20 group-hover:border-yellow-400/40 transition-all duration-500 shadow-2xl">
                   {/* Poster Image */}
                   <Image
                     src={film.image}
@@ -220,7 +254,7 @@ export default function GalleryPage() {
                 </div>
 
                 {/* Film Details */}
-                <div className="mt-6">
+                <div className="mt-6 p-6 bg-black/30 backdrop-blur-sm rounded-xl border border-yellow-400/10">
                   <h3 className="text-2xl font-bold text-yellow-400 mb-2 group-hover:text-yellow-300 transition-colors duration-300">
                     {film.title}
                   </h3>
@@ -246,17 +280,7 @@ export default function GalleryPage() {
         />
       </Suspense>
 
-      {/* Background Grain Effect - Optimized */}
-      <div className="fixed inset-0 pointer-events-none z-[1] will-change-auto">
-        <div 
-          className="absolute inset-0 opacity-20" 
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fbbf24' fill-opacity='0.03'%3E%3Ccircle cx='5' cy='5' r='0.5'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '40px 40px',
-            transform: 'translateZ(0)'
-          }} 
-        />
-      </div>
+      {/* Background Grain Effect - Removed to not interfere with DomeGalery */}
 
     </div>
   );

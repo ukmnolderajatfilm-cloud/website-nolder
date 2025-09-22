@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
 import Lenis from 'lenis';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import Opener from "./Layouts/Opener";
 import Navbar from "./Layouts/Navbar";
 import AboutBentoLayout from "./Layouts/AboutBentoLayout";
 import Hero from "./Components/Hero";
@@ -13,29 +12,25 @@ import CabinetCarousel from "./Components/CabinetCarousel";
 import CardSwap, { Card } from "./Components/CardSwap";
 import CircularGallery from "./Components/CircularGalery";
 
-// Dynamic import untuk TrailerModal
+// Dynamic import untuk TrailerModal dan ContentPromoModal
 import dynamic from 'next/dynamic';
 
 const TrailerModal = dynamic(() => import("./Components/TrailerModal"), {
   ssr: false
 });
 
+const ContentPromoModal = dynamic(() => import("./Components/ContentPromoModal"), {
+  ssr: false
+});
+
 export default function Home() {
-  const [showMainContent, setShowMainContent] = useState(false);
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
+  const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
   const lenisRef = useRef();
   const { scrollYProgress } = useScroll();
 
-  const handleOpenerComplete = () => {
-    // Delay untuk memberikan waktu transisi slide up ke main content
-    setTimeout(() => {
-      setShowMainContent(true);
-    }, 1000);
-  };
-
   // Initialize Lenis Smooth Scroll
   useEffect(() => {
-    if (showMainContent) {
       const lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -59,8 +54,7 @@ export default function Home() {
       return () => {
         lenis.destroy();
       };
-    }
-  }, [showMainContent]);
+  }, []);
 
   // Smooth scroll to section function
   const scrollToSection = (target) => {
@@ -75,22 +69,11 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Navbar - Only show when main content is visible */}
-      {showMainContent && <Navbar scrollToSection={scrollToSection} />}
-      
-      {/* Opener Component */}
-      {!showMainContent && (
-        <Opener onAnimationComplete={handleOpenerComplete} />
-      )}
+      {/* Navbar */}
+      <Navbar scrollToSection={scrollToSection} />
       
       {/* Main Content */}
-      {showMainContent && (
-        <motion.div 
-          className="relative z-10"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-        >
+      <div className="relative z-10">
           
           {/* SECTION 1: BERANDA - Hero Section */}
           <Hero />
@@ -348,7 +331,7 @@ export default function Home() {
                   Partner dan kolaborator yang telah bersama kami menciptakan karya-karya sinematik berkualitas
                 </p>
               </motion.div>
-              
+
               {/* Partners Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
@@ -364,6 +347,10 @@ export default function Home() {
                     <span className="text-yellow-400 text-sm font-semibold">Partner {item}</span>
                   </motion.div>
                 ))}
+
+               
+
+                
               </div>
 
             </div>
@@ -395,36 +382,78 @@ export default function Home() {
               </div>
             </div>
           </footer>
-        </motion.div>
-      )}
+        </div>
 
-      {/* Trailer Modal */}
-      <TrailerModal 
-        isOpen={isTrailerModalOpen} 
-        onClose={() => setIsTrailerModalOpen(false)}
-        videoId="R37-EC48yoc"
-      />
+        {/* Floating Content Promo Button */}
+        <motion.div
+          className="fixed bottom-6 right-6 z-40"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2, duration: 0.3 }}
+        >
+          <motion.button
+            onClick={() => setIsContentPromoModalOpen(true)}
+            className="group relative bg-white hover:bg-gray-50 border border-gray-300 hover:border-gray-400 text-gray-900 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {/* Notification Badge */}
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs font-medium rounded-full flex items-center justify-center">
+              3
+            </div>
+            
+            {/* Icon */}
+            <div className="relative flex items-center justify-center">
+              <img
+                src="/Images/nolder-logo-item.png"
+                alt="Nolder Logo"
+                className="w-5 h-5 object-contain"
+              />
+            </div>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+              <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap">
+                Konten Baru
+                <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              </div>
+            </div>
+          </motion.button>
+        </motion.div>
+
+        {/* Trailer Modal */}
+        <TrailerModal 
+          isOpen={isTrailerModalOpen} 
+          onClose={() => setIsTrailerModalOpen(false)}
+          videoId="R37-EC48yoc"
+        />
+
+        {/* Content Promo Modal */}
+        <ContentPromoModal 
+          isOpen={isContentPromoModalOpen} 
+          onClose={() => setIsContentPromoModalOpen(false)}
+        />
       
-      {/* Custom CSS untuk Cinematic Effects */}
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        {/* Custom CSS untuk Cinematic Effects */}
+        <style jsx global>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+          
+          html {
+            scroll-behavior: auto;
+          }
+          
+          body {
+            font-family: 'Inter', sans-serif;
+            background: #000000;
+          }
+          
+          .font-cinematic {
+            font-family: 'Cinzel', serif;
+          }
         
-        html {
-          scroll-behavior: auto;
-        }
-        
-        body {
-          font-family: 'Inter', sans-serif;
-          background: #000000;
-        }
-        
-        .font-cinematic {
-          font-family: 'Cinzel', serif;
-        }
-        
-        .bg-gradient-radial {
-          background: radial-gradient(var(--tw-gradient-stops));
-        }
+          .bg-gradient-radial {
+            background: radial-gradient(var(--tw-gradient-stops));
+          }
         
         .text-glow {
           text-shadow: 
@@ -616,6 +645,34 @@ export default function Home() {
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
       `}</style>
+
+      {/* Hidden Admin Access - Triple click on logo to access */}
+      <div 
+        className="fixed top-4 left-4 w-8 h-8 opacity-0 cursor-pointer"
+        onClick={(e) => {
+          // Triple click detection
+          if (typeof window !== 'undefined') {
+            const now = Date.now();
+            if (!window.lastClickTime || now - window.lastClickTime > 1000) {
+              window.clickCount = 1;
+            } else {
+              window.clickCount++;
+            }
+            window.lastClickTime = now;
+            
+            if (window.clickCount === 3) {
+              window.location.href = '/admin/login';
+            }
+          }
+        }}
+        title="Triple click for admin access"
+      >
+        <img
+          src="/Images/nolder-logo-item.png"
+          alt="Admin Access"
+          className="w-full h-full object-contain"
+        />
+      </div>
     </div>
   );
 }

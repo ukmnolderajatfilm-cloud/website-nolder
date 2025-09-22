@@ -1,7 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import FilmRoll from './FilmRoll';
-import Masonry from './Masonry/Masonry';
+import dynamic from 'next/dynamic';
+
+// Dynamic import Masonry to avoid SSR issues
+const Masonry = dynamic(() => import('./Masonry/Masonry'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black/50" />
+});
 
 const Hero = () => {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);

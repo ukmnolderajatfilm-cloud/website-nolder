@@ -2,14 +2,25 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 
 const useMedia = (queries, values, defaultValue) => {
-  const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
+  // Check if window is defined (browser environment)
+  const isBrowser = typeof window !== 'undefined';
+  
+  const get = () => {
+    if (!isBrowser) return defaultValue;
+    const index = queries.findIndex(q => window.matchMedia(q).matches);
+    return index >= 0 ? values[index] : defaultValue;
+  };
 
   const [value, setValue] = useState(get);
 
   useEffect(() => {
+    if (!isBrowser) return;
+    
     const handler = () => setValue(get);
-    queries.forEach(q => matchMedia(q).addEventListener('change', handler));
-    return () => queries.forEach(q => matchMedia(q).removeEventListener('change', handler));
+    const mediaQueries = queries.map(q => window.matchMedia(q));
+    
+    mediaQueries.forEach(mq => mq.addEventListener('change', handler));
+    return () => mediaQueries.forEach(mq => mq.removeEventListener('change', handler));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queries]);
 
@@ -80,11 +91,11 @@ const Masonry = ({
       case 'top':
         return { x: item.x, y: -200 };
       case 'bottom':
-        return { x: item.x, y: window.innerHeight + 200 };
+        return { x: item.x, y: typeof window !== 'undefined' ? window.innerHeight + 200 : 1000 };
       case 'left':
         return { x: -200, y: item.y };
       case 'right':
-        return { x: window.innerWidth + 200, y: item.y };
+        return { x: typeof window !== 'undefined' ? window.innerWidth + 200 : 1200, y: item.y };
       case 'center':
         return {
           x: containerRect.width / 2 - item.w / 2,
