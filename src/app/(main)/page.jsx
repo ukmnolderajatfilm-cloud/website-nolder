@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
-import Lenis from 'lenis';
+// import Lenis from 'lenis'; // Disabled for better performance
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import Navbar from "./Layouts/Navbar";
 import AboutBentoLayout from "./Layouts/AboutBentoLayout";
@@ -26,43 +26,43 @@ const ContentPromoModal = dynamic(() => import("./Components/ContentPromoModal")
 export default function Home() {
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
-  const lenisRef = useRef();
+  // const lenisRef = useRef(); // No longer needed
   const { scrollYProgress } = useScroll();
 
-  // Initialize Lenis Smooth Scroll
-  useEffect(() => {
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        direction: 'vertical',
-        gestureDirection: 'vertical',
-        smooth: true,
-        mouseMultiplier: 1,
-        smoothTouch: false,
-        touchMultiplier: 2,
-        infinite: false,
-      });
+  // Disable Lenis Smooth Scroll for better performance
+  // useEffect(() => {
+  //     const lenis = new Lenis({
+  //       duration: 1.2,
+  //       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  //       direction: 'vertical',
+  //       gestureDirection: 'vertical',
+  //       smooth: true,
+  //       mouseMultiplier: 1,
+  //       smoothTouch: false,
+  //       touchMultiplier: 2,
+  //       infinite: false,
+  //     });
 
-      lenisRef.current = lenis;
+  //     lenisRef.current = lenis;
 
-      function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-      }
-      requestAnimationFrame(raf);
+  //     function raf(time) {
+  //       lenis.raf(time);
+  //       requestAnimationFrame(raf);
+  //     }
+  //     requestAnimationFrame(raf);
 
-      return () => {
-        lenis.destroy();
-      };
-  }, []);
+  //     return () => {
+  //       lenis.destroy();
+  //     };
+  // }, []);
 
-  // Smooth scroll to section function
+  // Native smooth scroll to section function
   const scrollToSection = (target) => {
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(target, {
-        offset: 0,
-        duration: 2.5,
-        easing: (t) => 1 - Math.pow(1 - t, 3),
+    const element = document.querySelector(target);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       });
     }
   };
@@ -438,9 +438,9 @@ export default function Home() {
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
           
-          html {
-            scroll-behavior: auto;
-          }
+           html {
+             scroll-behavior: smooth;
+           }
           
           body {
             font-family: 'Inter', sans-serif;

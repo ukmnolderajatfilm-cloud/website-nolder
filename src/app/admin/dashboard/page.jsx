@@ -4,13 +4,68 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ContentManager from './components/ContentManager';
+import CabinetManager from './components/CabinetManager';
+import FilmManager from './components/FilmManager';
+import SettingsManager from './components/SettingsManager';
 
 export default function AdminDashboard() {
   const [adminUser, setAdminUser] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    totalVideos: 0,
+    totalFollowers: 0,
+    engagement: 0,
+    recentActivity: []
+  });
   const router = useRouter();
+
+  // Fetch dashboard stats
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/contents');
+      const data = await response.json();
+      
+      if (data.success) {
+        const contents = data.contents || [];
+        const publishedContents = contents.filter(content => content.isPublished);
+        
+        setStats({
+          totalProjects: contents.length,
+          totalVideos: contents.filter(content => content.platform === 'youtube').length,
+          totalFollowers: 2400, // Mock data - bisa diambil dari analytics API
+          engagement: Math.round((publishedContents.length / Math.max(contents.length, 1)) * 100),
+          recentActivity: [
+            {
+              id: 1,
+              type: 'video_upload',
+              message: 'New video uploaded',
+              time: '2 hours ago',
+              status: 'active'
+            },
+            {
+              id: 2,
+              type: 'gallery_update',
+              message: 'Gallery updated',
+              time: '5 hours ago',
+              status: 'completed'
+            },
+            {
+              id: 3,
+              type: 'settings_change',
+              message: 'Settings modified',
+              time: '1 day ago',
+              status: 'completed'
+            }
+          ]
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   // Cek autentikasi
   useEffect(() => {
@@ -25,6 +80,7 @@ export default function AdminDashboard() {
         console.log('✅ Authenticated, loading dashboard');
         setAdminUser(user);
         setIsLoading(false);
+        fetchStats(); // Fetch stats after authentication
       } else {
         console.log('❌ Not authenticated, redirecting to login');
         // Clear any invalid data first
@@ -181,7 +237,7 @@ export default function AdminDashboard() {
                     : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
-                Konten
+                Manage Konten
               </button>
               <button
                 onClick={() => setActiveTab('projects')}
@@ -191,7 +247,17 @@ export default function AdminDashboard() {
                     : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
-                Proyek
+                Manage Film
+              </button>
+              <button
+                onClick={() => setActiveTab('cabinet')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'cabinet'
+                    ? 'border-yellow-500 text-yellow-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Manage Kabinet
               </button>
               <button
                 onClick={() => setActiveTab('settings')}
@@ -218,179 +284,251 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-white">24</p>
-                  <p className="text-gray-400 text-sm">Total Projects</p>
-                </div>
-              </div>
-            </motion.div>
+              {/* Bento Grid Layout */}
+              <div className="grid gap-4 sm:mt-8 lg:grid-cols-3 lg:grid-rows-2">
+                {/* Main Stats Card - Large */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="relative lg:row-span-2 group"
+                >
+                  <div className="absolute inset-px rounded-lg bg-white/5 lg:rounded-l-4xl"></div>
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] lg:rounded-l-[calc(2rem+1px)] bg-white/5 backdrop-blur-xl border border-white/10">
+                    <div className="px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
+                      <p className="mt-2 text-lg font-medium tracking-tight text-white max-lg:text-center">Dashboard Overview</p>
+                      <p className="mt-2 max-w-lg text-sm/6 text-gray-400 max-lg:text-center">Monitor dan kelola semua aspek website Nolder Rajat Film</p>
+                    </div>
+                    <div className="flex-1 px-8 pb-8 sm:px-10 sm:pb-10">
+                      <div className="grid grid-cols-2 gap-4 h-full">
+                        <div className="space-y-4">
+                          <div className="bg-white/5 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-300">Total Projects</span>
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stats.totalProjects}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-300">Videos</span>
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stats.totalVideos}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="bg-white/5 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-300">Followers</span>
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stats.totalFollowers.toLocaleString()}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-300">Engagement</span>
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stats.engagement}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15 lg:rounded-l-4xl"></div>
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-white">156</p>
-                  <p className="text-gray-400 text-sm">Videos Uploaded</p>
-                </div>
-              </div>
-            </motion.div>
+                {/* Quick Actions Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="relative max-lg:row-start-1 group"
+                >
+                  <div className="absolute inset-px rounded-lg bg-white/5 max-lg:rounded-t-4xl"></div>
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-t-[calc(2rem+1px)] bg-white/5 backdrop-blur-xl border border-white/10">
+                    <div className="px-8 pt-8 sm:px-10 sm:pt-10">
+                      <p className="mt-2 text-lg font-medium tracking-tight text-white max-lg:text-center">Quick Actions</p>
+                      <p className="mt-2 max-w-lg text-sm/6 text-gray-400 max-lg:text-center">Akses cepat ke fitur-fitur utama</p>
+                    </div>
+                    <div className="flex-1 px-8 pb-8 sm:px-10 sm:pb-10">
+                      <div className="space-y-3">
+                        <button 
+                          onClick={() => setActiveTab('contents')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                            </svg>
+                            <span className="text-white font-medium">Manage Content</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setActiveTab('projects')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span className="text-white font-medium">Manage Films</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setActiveTab('cabinet')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-purple-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            <span className="text-white font-medium">Manage Kabinet</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setActiveTab('settings')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                              <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                            </svg>
+                            <span className="text-white font-medium">Settings</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15 max-lg:rounded-t-4xl"></div>
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-white">2.4K</p>
-                  <p className="text-gray-400 text-sm">Followers</p>
-                </div>
-              </div>
-            </motion.div>
+                {/* Recent Activity Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative max-lg:row-start-3 lg:col-start-2 lg:row-start-2 group"
+                >
+                  <div className="absolute inset-px rounded-lg bg-white/5"></div>
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] bg-white/5 backdrop-blur-xl border border-white/10">
+                    <div className="px-8 pt-8 sm:px-10 sm:pt-10">
+                      <p className="mt-2 text-lg font-medium tracking-tight text-white max-lg:text-center">Recent Activity</p>
+                      <p className="mt-2 max-w-lg text-sm/6 text-gray-400 max-lg:text-center">Aktivitas terbaru di sistem</p>
+                    </div>
+                    <div className="flex-1 px-8 pb-8 sm:px-10 sm:pb-10">
+                      <div className="space-y-3">
+                        {stats.recentActivity.map((activity) => (
+                          <div key={activity.id} className="flex items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                            <div className={`w-2 h-2 rounded-full mr-3 ${
+                              activity.status === 'active' 
+                                ? 'bg-green-400 animate-pulse' 
+                                : activity.type === 'video_upload' 
+                                  ? 'bg-green-400' 
+                                  : activity.type === 'gallery_update' 
+                                    ? 'bg-blue-400' 
+                                    : 'bg-yellow-400'
+                            }`}></div>
+                            <div className="flex-1">
+                              <p className="text-white text-sm font-medium">{activity.message}</p>
+                              <p className="text-gray-400 text-xs">{activity.time}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15"></div>
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-white">89%</p>
-                  <p className="text-gray-400 text-sm">Engagement</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+                {/* System Status Card - Large */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative lg:row-span-2 group"
+                >
+                  <div className="absolute inset-px rounded-lg bg-white/5 max-lg:rounded-b-4xl lg:rounded-r-4xl"></div>
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)] bg-white/5 backdrop-blur-xl border border-white/10">
+                    <div className="px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
+                      <p className="mt-2 text-lg font-medium tracking-tight text-white max-lg:text-center">System Status</p>
+                      <p className="mt-2 max-w-lg text-sm/6 text-gray-400 max-lg:text-center">Monitor kesehatan sistem dan keamanan</p>
+                    </div>
+                    <div className="flex-1 px-8 pb-8 sm:px-10 sm:pb-10">
+                      <div className="space-y-6">
+                        {/* Security Status */}
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">Security Status</span>
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                              <span className="text-xs text-green-400 font-medium">Secure</span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div className="bg-green-400 h-2 rounded-full" style={{width: '95%'}}></div>
+                          </div>
+                        </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
-                    </svg>
-                    <span className="text-white">Upload New Content</span>
-                  </div>
-                </button>
-                
-                <button className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span className="text-white">Manage Gallery</span>
-                  </div>
-                </button>
-                
-                <button className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-                    </svg>
-                    <span className="text-white">Edit Site Settings</span>
-                  </div>
-                </button>
-              </div>
-            </motion.div>
+                        {/* Performance Metrics */}
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">Performance</span>
+                            <span className="text-xs text-blue-400 font-medium">Excellent</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-white">2.1s</p>
+                              <p className="text-xs text-gray-400">Load Time</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-white">99.9%</p>
+                              <p className="text-xs text-gray-400">Uptime</p>
+                            </div>
+                          </div>
+                        </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6"
-            >
-              <h3 className="text-xl font-semibold text-white mb-4">Recent Activity</h3>
-              <div className="space-y-4">
-                <div className="flex items-center p-3 bg-white/5 rounded-lg">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                  <div>
-                    <p className="text-white text-sm">New video uploaded</p>
-                    <p className="text-gray-400 text-xs">2 hours ago</p>
+                        {/* Security Notice */}
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <svg className="w-5 h-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                              <h4 className="text-yellow-400 font-semibold text-sm mb-1">Security Notice</h4>
+                              <p className="text-gray-300 text-xs">
+                                Pastikan untuk logout setelah selesai menggunakan sistem.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center p-3 bg-white/5 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                  <div>
-                    <p className="text-white text-sm">Gallery updated</p>
-                    <p className="text-gray-400 text-xs">5 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center p-3 bg-white/5 rounded-lg">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
-                  <div>
-                    <p className="text-white text-sm">Settings modified</p>
-                    <p className="text-gray-400 text-xs">1 day ago</p>
-                  </div>
-                </div>
+                  <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15 max-lg:rounded-b-4xl lg:rounded-r-4xl"></div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
-
-              {/* Security Notice */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="mt-8 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6"
-              >
-                <div className="flex items-start">
-                  <svg className="w-6 h-6 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <h4 className="text-yellow-400 font-semibold mb-2">Security Notice</h4>
-                    <p className="text-gray-300 text-sm">
-                      Anda sedang mengakses panel administrasi yang sensitif. Pastikan untuk logout setelah selesai menggunakan sistem ini.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
             </>
           )}
 
@@ -399,17 +537,15 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'projects' && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold text-white mb-2">Proyek Management</h3>
-              <p className="text-gray-400">Fitur ini akan segera hadir!</p>
-            </div>
+            <FilmManager />
+          )}
+
+          {activeTab === 'cabinet' && (
+            <CabinetManager />
           )}
 
           {activeTab === 'settings' && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold text-white mb-2">Pengaturan</h3>
-              <p className="text-gray-400">Fitur ini akan segera hadir!</p>
-            </div>
+            <SettingsManager />
           )}
         </motion.div>
       </main>
