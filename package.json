@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:reset": "node scripts/reset-and-seed.js",
+    "db:seed": "node scripts/production-seed.js",
+    "db:divisions": "node scripts/seed-divisions.js",
+    "db:setup": "node scripts/setup-db.js"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

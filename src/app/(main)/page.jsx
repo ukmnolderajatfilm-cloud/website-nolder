@@ -26,6 +26,7 @@ const ContentPromoModal = dynamic(() => import("./Components/ContentPromoModal")
 export default function Home() {
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
+  const [promoContentCount, setPromoContentCount] = useState(0);
   // const lenisRef = useRef(); // No longer needed
   const { scrollYProgress } = useScroll();
 
@@ -55,6 +56,53 @@ export default function Home() {
   //       lenis.destroy();
   //     };
   // }, []);
+
+  // Fetch promo content count with monthly reset
+  useEffect(() => {
+    const fetchPromoCount = async () => {
+      try {
+        const response = await fetch('/api/contents/promo');
+        const data = await response.json();
+        
+        if (data.success) {
+          const currentMonth = data.monthInfo.currentMonth;
+          const currentYear = data.monthInfo.currentYear;
+          const monthKey = `${currentYear}-${currentMonth}`;
+          
+          // Check if we've already shown notification for this month
+          const lastShownMonth = localStorage.getItem('nolder-last-shown-month');
+          const hasSeenThisMonth = lastShownMonth === monthKey;
+          
+          // Only show count if there are contents and user hasn't seen this month's content
+          if (data.contents.length > 0 && !hasSeenThisMonth) {
+            setPromoContentCount(data.contents.length);
+          } else {
+            setPromoContentCount(0);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching promo count:', error);
+      }
+    };
+
+    fetchPromoCount();
+  }, []);
+
+  // Mark current month as seen when modal is opened
+  const handleContentPromoOpen = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const monthKey = `${currentYear}-${currentMonth}`;
+    
+    // Mark this month as seen
+    localStorage.setItem('nolder-last-shown-month', monthKey);
+    setPromoContentCount(0); // Hide notification badge
+    
+    setIsContentPromoModalOpen(true);
+  };
+
+
 
   // Native smooth scroll to section function
   const scrollToSection = (target) => {
@@ -392,15 +440,17 @@ export default function Home() {
           transition={{ delay: 2, duration: 0.3 }}
         >
           <motion.button
-            onClick={() => setIsContentPromoModalOpen(true)}
+            onClick={handleContentPromoOpen}
             className="group relative bg-white hover:bg-gray-50 border border-gray-300 hover:border-gray-400 text-gray-900 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             {/* Notification Badge */}
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs font-medium rounded-full flex items-center justify-center">
-              3
-            </div>
+            {promoContentCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                {promoContentCount}
+              </div>
+            )}
             
             {/* Icon */}
             <div className="relative flex items-center justify-center">

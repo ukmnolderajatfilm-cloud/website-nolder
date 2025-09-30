@@ -99,6 +99,60 @@ async function main() {
 
   console.log('✅ Sample projects created')
 
+  // Buat sample cabinet
+  const sampleCabinet = await prisma.cabinet.create({
+    data: {
+      name: 'Kabinet Cineverso',
+      description: 'Kabinet yang bertanggung jawab untuk mengembangkan konten audio visual dan film di Nolder Rajat Film',
+      status: 'active',
+      adminId: admin.id
+    }
+  })
+
+  console.log('✅ Sample cabinet created:', sampleCabinet)
+
+  // Ambil divisions yang sudah ada
+  const divisions = await prisma.division.findMany()
+  console.log('📋 Available divisions:', divisions.map(d => ({ id: d.id, name: d.name, code: d.code })))
+
+  // Buat sample members dengan divisionId
+  const sampleMembers = [
+    {
+      name: 'John Doe',
+      position: 'Ketua',
+      description: 'Ketua kabinet yang bertanggung jawab untuk mengkoordinasikan seluruh kegiatan',
+      divisionId: divisions.find(d => d.code === 'ketua_umum')?.id,
+      cabinetId: sampleCabinet.id
+    },
+    {
+      name: 'Jane Smith',
+      position: 'Wakil Ketua',
+      description: 'Wakil ketua yang membantu mengkoordinasikan kegiatan kabinet',
+      divisionId: divisions.find(d => d.code === 'wakil_ketua_umum')?.id,
+      cabinetId: sampleCabinet.id
+    },
+    {
+      name: 'Mike Johnson',
+      position: 'Sekretaris',
+      description: 'Sekretaris yang mengatur administrasi kabinet',
+      divisionId: divisions.find(d => d.code === 'psdi')?.id,
+      cabinetId: sampleCabinet.id
+    }
+  ]
+
+  for (const member of sampleMembers) {
+    if (member.divisionId) {
+      await prisma.cabinetMember.create({
+        data: member
+      })
+      console.log(`✅ Created member: ${member.name}`)
+    } else {
+      console.log(`⚠️ Skipped member ${member.name} - division not found`)
+    }
+  }
+
+  console.log('✅ Sample members created')
+
   console.log('🎉 Database setup completed!')
 }
 

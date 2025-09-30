@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ContentManager from './components/ContentManager';
-import CabinetManager from './components/CabinetManager';
 import FilmManager from './components/FilmManager';
 import SettingsManager from './components/SettingsManager';
+import CabinetManager from './components/CabinetManager';
 
 export default function AdminDashboard() {
   const [adminUser, setAdminUser] = useState('');

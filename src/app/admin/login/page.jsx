@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 
 export default function AdminLogin() {
   const [credentials, setCredentials] = useState({
-    username: '',
-    password: ''
+    username: 'AdminN0lder',
+    password: 'N0lderFilm2025'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,10 +39,15 @@ export default function AdminLogin() {
     });
 
     try {
+      console.log('🚀 Starting login request...');
+      console.log('Request URL:', '/api/auth/simple-login');
+      console.log('Request body:', credentials);
+      
       // Create AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+      console.log('📡 Making fetch request...');
       const response = await fetch('/api/auth/simple-login', {
         method: 'POST',
         headers: {
@@ -53,6 +58,11 @@ export default function AdminLogin() {
       });
 
       clearTimeout(timeoutId);
+      console.log('📡 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
       
       // Check if response is ok
       if (!response.ok) {
@@ -60,6 +70,7 @@ export default function AdminLogin() {
       }
 
       const data = await response.json();
+      console.log('📄 Response data:', data);
 
       if (data.success) {
         console.log('Login successful, saving data...');
