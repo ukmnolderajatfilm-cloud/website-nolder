@@ -190,7 +190,16 @@ export default function CabinetManager() {
 
   const handleUpdateMember = async (memberData) => {
     const cabinet = selectedCabinet || activeCabinet;
-    if (!cabinet || !editingMember) return;
+    if (!cabinet || !editingMember) {
+      console.error('Missing cabinet or editingMember');
+      return;
+    }
+    
+    if (!editingMember.id) {
+      console.error('Missing member ID:', editingMember);
+      alert('Error: Member ID tidak ditemukan. Silakan coba lagi.');
+      return;
+    }
     
     console.log('Updating member with data:', memberData);
     console.log('Member ID:', editingMember.id, 'Cabinet ID:', cabinet.id);
@@ -628,7 +637,7 @@ export default function CabinetManager() {
 
         {/* Grid Container untuk Ketua dan Wakil Ketua */}
         <div className="grid gap-4 sm:mt-8 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
-          {/* Ketua Card */}
+          {/* Ketua Card - Always show */}
           <motion.div
             key="ketua"
             initial={{ opacity: 0, y: 20 }}
@@ -651,17 +660,34 @@ export default function CabinetManager() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
+                        <button
                         onClick={() => {
-                          // Find ketua member from active cabinet
-                          const ketuaMember = activeCabinet?.members?.find(member => 
-                            member.position.toLowerCase().includes('ketua') && 
-                            !member.position.toLowerCase().includes('wakil') &&
-                            member.division?.code === 'leadership'
-                          );
+                          // Get ketua data from structure
+                          const structure = getCabinetStructure(activeCabinet);
+                          const ketuaData = structure?.ketua;
+                          
+                          // Find ketua member from active cabinet - try multiple approaches
+                          let ketuaMember = null;
+                          
+                          // Approach 1: Find by name and position
+                          if (ketuaData?.name && ketuaData?.name !== 'Data Kosong') {
+                            ketuaMember = activeCabinet?.members?.find(member => 
+                              member.name === ketuaData.name && 
+                              member.position === ketuaData.position
+                            );
+                          }
+                          
+                          // Approach 2: Find by position and division
+                          if (!ketuaMember) {
+                            ketuaMember = activeCabinet?.members?.find(member => 
+                              member.position.toLowerCase().includes('ketua') && 
+                              !member.position.toLowerCase().includes('wakil') &&
+                              member.division?.code === 'leadership'
+                            );
+                          }
+                          
                           if (ketuaMember) {
                             setEditingMember(ketuaMember);
-                            setShowMemberForm(true);
                           } else {
                             // Create new ketua member
                             const leadershipDivision = divisions.find(d => d.code === 'leadership');
@@ -669,8 +695,8 @@ export default function CabinetManager() {
                               position: 'Ketua',
                               divisionId: leadershipDivision?.id
                             });
-                            setShowMemberForm(true);
                           }
+                          setShowMemberForm(true);
                         }}
                         className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
                         title="Edit"
@@ -679,34 +705,18 @@ export default function CabinetManager() {
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                         </svg>
                       </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Yakin ingin menghapus data ketua?')) {
-                            const ketuaMember = activeCabinet?.members?.find(member => 
-                              member.position.toLowerCase().includes('ketua') && 
-                              !member.position.toLowerCase().includes('wakil') &&
-                              member.division?.code === 'leadership'
-                            );
-                            if (ketuaMember) {
-                              handleDeleteMember(ketuaMember.id);
-                            }
-                          }
-                        }}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd"/>
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                        </svg>
-                      </button>
                 </div>
               </div>
 
               {/* Card Content - Centered */}
               <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                {/* Jabatan */}
-                <h3 className="text-lg font-semibold text-white">Ketua Kabinet</h3>
+                {/* Jabatan - Dynamic from database */}
+                <h3 className="text-lg font-semibold text-white">
+                  {(() => {
+                    const structure = getCabinetStructure(activeCabinet);
+                    return structure?.ketua?.position || 'Ketua Kabinet';
+                  })()}
+                </h3>
                 
                     {/* Foto */}
                     <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
@@ -730,7 +740,7 @@ export default function CabinetManager() {
                     <h4 className="text-xl font-bold text-white">
                       {(() => {
                         const structure = getCabinetStructure(activeCabinet);
-                        return structure?.ketua?.name === 'Data Kosong' ? 'Data Kosong' : structure?.ketua?.name || 'Data Kosong';
+                        return structure?.ketua?.name || 'Data Kosong';
                       })()}
                     </h4>
                     
@@ -738,7 +748,7 @@ export default function CabinetManager() {
                     <p className="text-gray-400 text-sm line-clamp-3">
                       {(() => {
                         const structure = getCabinetStructure(activeCabinet);
-                        return structure?.ketua?.description === 'Data Kosong' ? 'Data Kosong' : structure?.ketua?.description || 'Data Kosong';
+                        return structure?.ketua?.description || 'Data Kosong';
                       })()}
                     </p>
               </div>
@@ -746,7 +756,7 @@ export default function CabinetManager() {
             <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15"></div>
           </motion.div>
 
-          {/* Wakil Ketua Card */}
+          {/* Wakil Ketua Card - Always show */}
           <motion.div
             key="wakilKetua"
             initial={{ opacity: 0, y: 20 }}
@@ -771,15 +781,32 @@ export default function CabinetManager() {
                 <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
-                          // Find wakil ketua member from active cabinet
-                          const wakilKetuaMember = activeCabinet?.members?.find(member => 
-                            member.position.toLowerCase().includes('wakil') && 
-                            member.position.toLowerCase().includes('ketua') &&
-                            member.division?.code === 'leadership'
-                          );
+                          // Get wakil ketua data from structure
+                          const structure = getCabinetStructure(activeCabinet);
+                          const wakilKetuaData = structure?.wakilKetua;
+                          
+                          // Find wakil ketua member from active cabinet - try multiple approaches
+                          let wakilKetuaMember = null;
+                          
+                          // Approach 1: Find by name and position
+                          if (wakilKetuaData?.name && wakilKetuaData?.name !== 'Data Kosong') {
+                            wakilKetuaMember = activeCabinet?.members?.find(member => 
+                              member.name === wakilKetuaData.name && 
+                              member.position === wakilKetuaData.position
+                            );
+                          }
+                          
+                          // Approach 2: Find by position and division
+                          if (!wakilKetuaMember) {
+                            wakilKetuaMember = activeCabinet?.members?.find(member => 
+                              member.position.toLowerCase().includes('wakil') && 
+                              member.position.toLowerCase().includes('ketua') &&
+                              member.division?.code === 'leadership'
+                            );
+                          }
+                          
                           if (wakilKetuaMember) {
                             setEditingMember(wakilKetuaMember);
-                            setShowMemberForm(true);
                           } else {
                             // Create new wakil ketua member
                             const leadershipDivision = divisions.find(d => d.code === 'leadership');
@@ -787,8 +814,8 @@ export default function CabinetManager() {
                               position: 'Wakil Ketua',
                               divisionId: leadershipDivision?.id
                             });
-                            setShowMemberForm(true);
                           }
+                          setShowMemberForm(true);
                         }}
                         className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
                         title="Edit"
@@ -797,34 +824,18 @@ export default function CabinetManager() {
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                         </svg>
                       </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Yakin ingin menghapus data wakil ketua?')) {
-                            const wakilKetuaMember = activeCabinet?.members?.find(member => 
-                              member.position.toLowerCase().includes('wakil') && 
-                              member.position.toLowerCase().includes('ketua') &&
-                              member.division?.code === 'leadership'
-                            );
-                            if (wakilKetuaMember) {
-                              handleDeleteMember(wakilKetuaMember.id);
-                            }
-                          }
-                        }}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd"/>
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                        </svg>
-                      </button>
                 </div>
               </div>
 
               {/* Card Content - Centered */}
               <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                {/* Jabatan */}
-                <h3 className="text-lg font-semibold text-white">Wakil Ketua Kabinet</h3>
+                {/* Jabatan - Dynamic from database */}
+                <h3 className="text-lg font-semibold text-white">
+                  {(() => {
+                    const structure = getCabinetStructure(activeCabinet);
+                    return structure?.wakilKetua?.position || 'Wakil Ketua Kabinet';
+                  })()}
+                </h3>
                 
                     {/* Foto */}
                     <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
@@ -848,7 +859,7 @@ export default function CabinetManager() {
                     <h4 className="text-xl font-bold text-white">
                       {(() => {
                         const structure = getCabinetStructure(activeCabinet);
-                        return structure?.wakilKetua?.name === 'Data Kosong' ? 'Data Kosong' : structure?.wakilKetua?.name || 'Data Kosong';
+                        return structure?.wakilKetua?.name || 'Data Kosong';
                       })()}
                     </h4>
                     
@@ -856,7 +867,7 @@ export default function CabinetManager() {
                     <p className="text-gray-400 text-sm line-clamp-3">
                       {(() => {
                         const structure = getCabinetStructure(activeCabinet);
-                        return structure?.wakilKetua?.description === 'Data Kosong' ? 'Data Kosong' : structure?.wakilKetua?.description || 'Data Kosong';
+                        return structure?.wakilKetua?.description || 'Data Kosong';
                       })()}
                     </p>
               </div>
@@ -899,18 +910,6 @@ export default function CabinetManager() {
                 <p className="text-sm text-gray-400 mb-2">{division.description}</p>
                 <hr className="border-gray-600" />
               </div>
-              <button
-                onClick={() => {
-                  setEditingMember(`${division.code}.new`);
-                  setShowMemberForm(true);
-                }}
-                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"/>
-                </svg>
-                Tambah Anggota
-              </button>
             </div>
 
             <div className={`grid gap-4 sm:mt-8 ${
@@ -918,14 +917,19 @@ export default function CabinetManager() {
                 ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' 
                 : 'lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
             }`}>
-              {positions.map((member, index) => (
-                <motion.div
-                  key={member.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + divisionIndex * 0.4 + index * 0.1 }}
-                  className="relative group"
-                >
+              {positions.map((member, index) => {
+                const memberData = divisionData[member.key];
+                // Only show card if has actual data (not "Data Kosong")
+                if (!memberData || memberData.name === 'Data Kosong') return null;
+                
+                return (
+                  <motion.div
+                    key={member.key}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + divisionIndex * 0.4 + index * 0.1 }}
+                    className="relative group"
+                  >
                   <div className="absolute inset-px rounded-lg bg-white/5"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] bg-white/5 backdrop-blur-xl border border-white/10 p-6 hover:bg-white/10 transition-all duration-200">
                     <div className="flex items-center justify-between mb-4">
@@ -936,16 +940,38 @@ export default function CabinetManager() {
                           </svg>
                         </div>
                         <span className="text-sm font-medium text-gray-300">
-                          {member.title}
+                          {memberData.position || member.title}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => {
-                            const memberData = divisionData[member.key];
-                            if (memberData?.name) {
-                              setEditingMember(memberData);
+                            // Find the actual member from active cabinet to edit
+                            // Use the memberData that's already being displayed
+                            const memberToEdit = activeCabinet?.members?.find(m => 
+                              m.name === memberData.name && 
+                              m.position === memberData.position &&
+                              m.division?.code === division.code
+                            );
+                            
+                            if (memberToEdit) {
+                              setEditingMember(memberToEdit);
                               setShowMemberForm(true);
+                            } else {
+                              // Fallback: try to find by position and division only
+                              const fallbackMember = activeCabinet?.members?.find(m => 
+                                m.division?.code === division.code &&
+                                (
+                                  (member.key === 'ketua' && m.position.toLowerCase().includes('ketua') && !m.position.toLowerCase().includes('wakil')) ||
+                                  (member.key === 'wakilKetua' && m.position.toLowerCase().includes('wakil') && m.position.toLowerCase().includes('ketua')) ||
+                                  (member.key === 'sekretaris' && m.position.toLowerCase().includes('sekretaris')) ||
+                                  (member.key === 'bendahara' && m.position.toLowerCase().includes('bendahara'))
+                                )
+                              );
+                              if (fallbackMember) {
+                                setEditingMember(fallbackMember);
+                                setShowMemberForm(true);
+                              }
                             }
                           }}
                           className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
@@ -955,37 +981,19 @@ export default function CabinetManager() {
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                           </svg>
                         </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Yakin ingin menghapus data ${member.title.toLowerCase()}?`)) {
-                              // Find member from active cabinet
-                              const memberToDelete = activeCabinet?.members?.find(m => 
-                                m.position.toLowerCase().includes(member.key === 'wakilKetua' ? 'wakil' : member.key) && 
-                                m.division?.code === division.code
-                              );
-                              if (memberToDelete) {
-                                handleDeleteMember(memberToDelete.id);
-                              }
-                            }
-                          }}
-                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                          title="Hapus"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd"/>
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                          </svg>
-                        </button>
                       </div>
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                      <h3 className="text-lg font-semibold text-white">{member.title}</h3>
+                      {/* Jabatan - Dynamic from database */}
+                      <h3 className="text-lg font-semibold text-white">
+                        {memberData.position || member.title}
+                      </h3>
                       
                       <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
-                        {divisionData[member.key]?.image ? (
+                        {memberData.image ? (
                           <img
-                            src={divisionData[member.key].image}
+                            src={memberData.image}
                             alt={member.title}
                             className="w-full h-full object-cover"
                           />
@@ -997,17 +1005,18 @@ export default function CabinetManager() {
                       </div>
                       
                       <h4 className="text-xl font-bold text-white">
-                        {divisionData[member.key]?.name === 'Data Kosong' ? 'Data Kosong' : divisionData[member.key]?.name || 'Data Kosong'}
+                        {memberData.name}
                       </h4>
                       
                       <p className="text-gray-400 text-sm line-clamp-3">
-                        {divisionData[member.key]?.description === 'Data Kosong' ? 'Data Kosong' : divisionData[member.key]?.description || 'Data Kosong'}
+                        {memberData.description || 'Tidak ada deskripsi'}
                       </p>
                     </div>
                   </div>
                   <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-white/15"></div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         );

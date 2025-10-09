@@ -7,9 +7,161 @@ import ProfileCard from './ProfileCard';
 const CabinetCarousel = () => {
   const [currentDivision, setCurrentDivision] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [cabinetData, setCabinetData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Definisi divisi dengan data lengkap
-  const divisions = [
+  // Fetch active cabinet data from API and process images
+  useEffect(() => {
+    const fetchActiveCabinet = async () => {
+      try {
+        const response = await fetch('/api/cabinets/active');
+        const data = await response.json();
+        
+        if (data.success && data.cabinet) {
+          // Process images with background removal
+          const processedCabinet = await processImagesWithBgRemoval(data.cabinet);
+          setCabinetData(processedCabinet);
+        }
+      } catch (error) {
+        console.error('Error fetching cabinet data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchActiveCabinet();
+  }, []);
+
+  // Process all member images with background removal
+  const processImagesWithBgRemoval = async (cabinet) => {
+    if (!cabinet.members || cabinet.members.length === 0) {
+      return cabinet;
+    }
+
+    // Check if Remove.bg is enabled (skip if no API key for faster dev)
+    // Comment this block to always try processing
+    const skipBgRemoval = process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_ENABLE_BG_REMOVAL;
+    
+    if (skipBgRemoval) {
+      console.log('Background removal skipped in development mode');
+      return cabinet;
+    }
+
+    console.log('Processing', cabinet.members.length, 'member images...');
+
+    // Process all images in parallel
+    const processedMembers = await Promise.all(
+      cabinet.members.map(async (member) => {
+        if (!member.image || member.image === '/Images/nolder-logo.png') {
+          return member;
+        }
+
+        try {
+          // Call background removal API
+          const formData = new FormData();
+          formData.append('imageUrl', member.image);
+
+          const response = await fetch('/api/remove-bg', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.processedUrl && result.processedUrl !== member.image) {
+            console.log('✓ Background removed for:', member.name, result.cached ? '(cached)' : '(new)');
+            return {
+              ...member,
+              image: result.processedUrl,
+              originalImage: member.image // Keep original as backup
+            };
+          }
+
+          console.log('○ Using original image for:', member.name);
+          return member;
+        } catch (error) {
+          console.error('✗ Error processing image for', member.name, error);
+          return member; // Return original on error
+        }
+      })
+    );
+
+    return {
+      ...cabinet,
+      members: processedMembers
+    };
+  };
+
+  // Process cabinet data into divisions structure
+  const getDivisionsFromData = () => {
+    if (!cabinetData || !cabinetData.members) {
+      return [];
+    }
+
+    // Group members by division
+    const divisionMap = {};
+    
+    cabinetData.members.forEach(member => {
+      const divisionCode = member.division?.code || 'unknown';
+      const divisionName = member.division?.name || 'Unknown Division';
+      
+      // Gabungkan ketua_umum, wakil_ketua_umum, dan leadership jadi satu divisi "leadership"
+      let finalDivisionCode = divisionCode;
+      let finalDivisionName = divisionName;
+      let finalSubtitle = member.division?.description || '';
+      
+      if (divisionCode === 'ketua_umum' || divisionCode === 'wakil_ketua_umum' || divisionCode === 'leadership') {
+        finalDivisionCode = 'leadership';
+        finalDivisionName = 'KETUA & WAKIL KETUA';
+        finalSubtitle = 'Leadership Team';
+      }
+      
+      if (!divisionMap[finalDivisionCode]) {
+        divisionMap[finalDivisionCode] = {
+          id: finalDivisionCode,
+          title: finalDivisionName.toUpperCase(),
+          subtitle: finalSubtitle,
+          members: []
+        };
+      }
+      
+      divisionMap[finalDivisionCode].members.push({
+        name: member.name,
+        title: member.position,
+        handle: member.name.toLowerCase().replace(/\s+/g, ''),
+        status: member.description || 'Member',
+        avatarUrl: member.image || '/Images/nolder-logo.png',
+        miniAvatarUrl: member.image || '/Images/nolder-logo.png'
+      });
+    });
+
+    // Define division order and colors
+    const divisionOrder = ['leadership', 'anf', 'psdi', 'psdm', 'produksi', 'humi', 'dea'];
+    const divisionColors = {
+      leadership: { color: 'from-yellow-400 to-yellow-600', accentColor: 'rgba(251, 191, 36, 0.3)' },
+      anf: { color: 'from-blue-400 to-blue-600', accentColor: 'rgba(59, 130, 246, 0.3)' },
+      psdi: { color: 'from-purple-400 to-purple-600', accentColor: 'rgba(168, 85, 247, 0.3)' },
+      psdm: { color: 'from-green-400 to-green-600', accentColor: 'rgba(34, 197, 94, 0.3)' },
+      produksi: { color: 'from-red-400 to-red-600', accentColor: 'rgba(239, 68, 68, 0.3)' },
+      humi: { color: 'from-indigo-400 to-indigo-600', accentColor: 'rgba(99, 102, 241, 0.3)' },
+      dea: { color: 'from-pink-400 to-pink-600', accentColor: 'rgba(236, 72, 153, 0.3)' }
+    };
+
+    // Sort divisions by predefined order
+    const sortedDivisions = divisionOrder
+      .filter(code => divisionMap[code] && divisionMap[code].members.length > 0)
+      .map(code => ({
+        ...divisionMap[code],
+        ...divisionColors[code]
+      }));
+
+    return sortedDivisions;
+  };
+
+  const divisions = getDivisionsFromData();
+
+  // Fallback divisions if no data from database
+  const fallbackDivisions = [
     {
       id: 'leadership',
       title: 'KETUA & WAKIL KETUA',
@@ -246,18 +398,32 @@ const CabinetCarousel = () => {
   const nextDivision = () => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setCurrentDivision((prev) => (prev + 1) % divisions.length);
+    const activeDivisions = divisions.length > 0 ? divisions : fallbackDivisions;
+    setCurrentDivision((prev) => (prev + 1) % activeDivisions.length);
     setTimeout(() => setIsAnimating(false), 500);
   };
 
   const prevDivision = () => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setCurrentDivision((prev) => (prev - 1 + divisions.length) % divisions.length);
+    const activeDivisions = divisions.length > 0 ? divisions : fallbackDivisions;
+    setCurrentDivision((prev) => (prev - 1 + activeDivisions.length) % activeDivisions.length);
     setTimeout(() => setIsAnimating(false), 500);
   };
 
-  const currentDiv = divisions[currentDivision];
+  const activeDivisions = divisions.length > 0 ? divisions : fallbackDivisions;
+  const currentDiv = activeDivisions[currentDivision];
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="relative w-full max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-20">
+          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full max-w-7xl mx-auto">
@@ -309,7 +475,7 @@ const CabinetCarousel = () => {
             
             {/* Division Counter */}
             <div className="flex items-center justify-center space-x-2 mt-4">
-              {divisions.map((_, index) => (
+              {activeDivisions.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => !isAnimating && setCurrentDivision(index)}
@@ -387,6 +553,7 @@ const CabinetCarousel = () => {
                 showUserInfo={false}
                 enableTilt={true}
                 enableMobileTilt={false}
+                divisionColor={currentDiv.color}
                 onContactClick={() => console.log(`Contact ${member.name} clicked`)}
               />
             </motion.div>
@@ -400,7 +567,7 @@ const CabinetCarousel = () => {
           <motion.div
             className={`h-full bg-gradient-to-r ${currentDiv.color} rounded-full`}
             initial={{ width: 0 }}
-            animate={{ width: `${((currentDivision + 1) / divisions.length) * 100}%` }}
+            animate={{ width: `${((currentDivision + 1) / activeDivisions.length) * 100}%` }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           />
         </div>

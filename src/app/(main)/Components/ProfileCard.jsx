@@ -35,6 +35,7 @@ const ProfileCardComponent = ({
   status = 'Online',
   contactText = 'Contact',
   showUserInfo = true,
+  divisionColor = 'from-yellow-400 to-yellow-600',
   onContactClick
 }) => {
   const wrapRef = useRef(null);
@@ -292,8 +293,12 @@ const ProfileCardComponent = ({
           </div>
           <div className="profile-card__content">
             <div className="profile-card__details">
-              <h3>{name}</h3>
-              <p>{title}</p>
+              <h3 className={`text-transparent bg-clip-text bg-gradient-to-r ${divisionColor} font-bold text-2xl`}>
+                {name}
+              </h3>
+              <p className={`text-transparent bg-clip-text bg-gradient-to-r ${divisionColor} opacity-80 text-lg mt-1`}>
+                {title}
+              </p>
             </div>
           </div>
         </div>
