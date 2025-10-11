@@ -15,101 +15,52 @@ export default function GalleryPage() {
 
   useEffect(() => {
     setMounted(true);
+    fetchFilms();
+  }, [fetchFilms]);
+
+  const [films, setFilms] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch films from API
+  const fetchFilms = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/films?status=all&per_page=50');
+      const data = await response.json();
+      
+      if (data.meta.status === 'success') {
+        // Transform API data to match component expectations
+        const transformedFilms = data.data.films.map(film => ({
+          id: film.id,
+          title: film.filmTitle,
+          subtitle: film.description ? film.description.substring(0, 50) + '...' : 'Film Description',
+          image: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
+          videoId: film.trailerUrl ? extractVideoId(film.trailerUrl) : 'R37-EC48yoc',
+          year: new Date(film.releaseDate).getFullYear().toString(),
+          genre: film.filmGenre,
+          description: film.description || 'No description available.',
+          status: film.status
+        }));
+        setFilms(transformedFilms);
+      } else {
+        console.error('Error fetching films:', data.meta.message);
+        // Fallback to default films if API fails
+        setFilms([]);
+      }
+    } catch (error) {
+      console.error('Error fetching films:', error);
+      setFilms([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Film data - expandable with more films
-  const films = [
-    {
-      id: 1,
-      title: "TBFSP",
-      subtitle: "The Best Film So Far",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2024",
-      genre: "Drama",
-      description: "Sebuah karya sinematik yang menggambarkan perjalanan hidup dengan perspektif yang mendalam dan penuh makna."
-    },
-    {
-      id: 2,
-      title: "CINEMA VERITE",
-      subtitle: "Reality Through Lens",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2024",
-      genre: "Documentary",
-      description: "Eksplorasi mendalam tentang realitas kehidupan melalui lensa kamera sinematik."
-    },
-    {
-      id: 3,
-      title: "URBAN SYMPHONY",
-      subtitle: "City Life Chronicles",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2023",
-      genre: "Drama",
-      description: "Simfoni kehidupan perkotaan yang menggambarkan dinamika masyarakat modern."
-    },
-    {
-      id: 4,
-      title: "MIDNIGHT STORIES",
-      subtitle: "Tales After Dark",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2023",
-      genre: "Thriller",
-      description: "Kumpulan cerita misterius yang terjadi di tengah malam."
-    },
-    {
-      id: 5,
-      title: "GOLDEN HOUR",
-      subtitle: "Moments of Truth",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2024",
-      genre: "Romance",
-      description: "Kisah cinta yang tumbuh dalam momen-momen golden hour yang indah."
-    },
-    {
-      id: 6,
-      title: "RETROSPECTIVE",
-      subtitle: "Looking Back",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2022",
-      genre: "Biography",
-      description: "Perjalanan retrospektif kehidupan seorang sineas muda yang penuh inspirasi."
-    },
-    {
-      id: 7,
-      title: "FRAME BY FRAME",
-      subtitle: "The Art of Cinema",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2024",
-      genre: "Documentary",
-      description: "Dokumenter tentang proses kreatif dalam pembuatan film frame demi frame."
-    },
-    {
-      id: 8,
-      title: "SILENT ECHOES",
-      subtitle: "Unspoken Words",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2023",
-      genre: "Drama",
-      description: "Cerita tentang komunikasi yang terjalin tanpa kata-kata."
-    },
-    {
-      id: 9,
-      title: "CAMPUS DIARIES",
-      subtitle: "Student Life",
-      image: "/Images/poster-film/TBFSP.jpg",
-      videoId: "R37-EC48yoc",
-      year: "2024",
-      genre: "Comedy",
-      description: "Kisah lucu dan mengharukan tentang kehidupan mahasiswa di kampus."
-    }
-  ];
+  // Helper function to extract video ID from YouTube URL
+  const extractVideoId = (url) => {
+    if (!url) return 'R37-EC48yoc';
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    return match ? match[1] : 'R37-EC48yoc';
+  };
 
   const handlePosterClick = useCallback((film) => {
     setSelectedFilm(film);
@@ -121,10 +72,18 @@ export default function GalleryPage() {
     setSelectedFilm(null);
   }, []);
 
-  const memoizedFilms = useMemo(() => films, []);
+  const memoizedFilms = useMemo(() => films, [films]);
 
   if (!mounted) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
@@ -247,9 +206,12 @@ export default function GalleryPage() {
                     <span className="text-yellow-400 text-sm font-semibold">{film.year}</span>
                   </div>
 
-                  {/* Genre Badge */}
+                  {/* Status Badge */}
                   <div className="absolute top-4 right-4 bg-yellow-400/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                    <span className="text-black text-sm font-semibold">{film.genre}</span>
+                    <span className="text-black text-sm font-semibold">
+                      {film.status === 'now_showing' ? 'Now Showing' : 
+                       film.status === 'coming_soon' ? 'Coming Soon' : 'Archived'}
+                    </span>
                   </div>
                 </div>
 
@@ -259,6 +221,11 @@ export default function GalleryPage() {
                     {film.title}
                   </h3>
                   <p className="text-lg text-gray-300 mb-3">{film.subtitle}</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded-full">
+                      {film.genre}
+                    </span>
+                  </div>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     {film.description}
                   </p>

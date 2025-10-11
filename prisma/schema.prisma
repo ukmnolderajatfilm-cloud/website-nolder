@@ -26,6 +26,7 @@ model Admin {
   contents Content[]
   projects Project[]
   cabinets Cabinet[]
+  films Film[]
 
   @@map("admins")
 }
@@ -121,4 +122,32 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+model Film {
+  id          Int       @id @default(autoincrement())
+  filmTitle   String    @map("film_title")
+  filmGenre   String    @map("film_genre")
+  rating      Decimal   @db.Decimal(2, 1)
+  duration    Int       // in minutes
+  director    String
+  releaseDate DateTime  @map("release_date") @db.Date
+  status      FilmStatus @default(coming_soon)
+  description String? @db.Text
+  posterUrl   String?   @map("poster_url")
+  posterPath  String?   @map("poster_path")
+  trailerUrl  String?   @map("trailer_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  adminId     Int       @map("admin_id")
+  admin       Admin     @relation(fields: [adminId], references: [id])
+
+  @@map("films")
+}
+
+enum FilmStatus {
+  coming_soon
+  now_showing
+  archived
 }

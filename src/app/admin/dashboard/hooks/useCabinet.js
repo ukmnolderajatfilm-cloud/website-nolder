@@ -19,10 +19,19 @@ export const useCabinet = () => {
         setError(null); // Clear any previous errors
       } else {
         setError(data.error);
+        // If authentication error, redirect to login
+        if (response.status === 401) {
+          console.log('Authentication required, redirecting to login...');
+          window.location.href = '/admin/login';
+        }
       }
     } catch (err) {
-      setError('Failed to fetch cabinets');
       console.error('Error fetching cabinets:', err);
+      if (err.message === 'Failed to fetch') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Failed to fetch cabinets. Please try again.');
+      }
     } finally {
       if (showLoading) {
         setIsLoading(false);

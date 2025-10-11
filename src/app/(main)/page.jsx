@@ -27,6 +27,7 @@ export default function Home() {
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
   const [promoContentCount, setPromoContentCount] = useState(0);
+  const [featuredFilms, setFeaturedFilms] = useState([]);
   // const lenisRef = useRef(); // No longer needed
   const { scrollYProgress } = useScroll();
 
@@ -56,6 +57,39 @@ export default function Home() {
   //       lenis.destroy();
   //     };
   // }, []);
+
+  // Fetch featured films
+  useEffect(() => {
+    const fetchFeaturedFilms = async () => {
+      try {
+        const response = await fetch('/api/films/featured?limit=6&status=now_showing');
+        const data = await response.json();
+        
+        if (data.meta.status === 'success') {
+          const transformedFilms = data.data.films.map(film => ({
+            image: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
+            text: film.filmTitle,
+            id: film.id,
+            trailerUrl: film.trailerUrl
+          }));
+          setFeaturedFilms(transformedFilms);
+        }
+      } catch (error) {
+        console.error('Error fetching featured films:', error);
+        // Fallback to default items
+        setFeaturedFilms([
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'Film Poster' },
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'Nol Derajat' },
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'Cinema' },
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'Production' },
+          { image: '/Images/poster-film/TBFSP.jpg', text: 'Showcase' }
+        ]);
+      }
+    };
+
+    fetchFeaturedFilms();
+  }, []);
 
   // Fetch promo content count with monthly reset
   useEffect(() => {
@@ -296,7 +330,7 @@ export default function Home() {
                   className="w-full h-full"
                 >
                   <CircularGallery
-                    items={[
+                    items={featuredFilms.length > 0 ? featuredFilms : [
                       { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
                       { image: '/Images/poster-film/TBFSP.jpg', text: 'Film Poster' },
                       { image: '/Images/poster-film/TBFSP.jpg', text: 'Nol Derajat' },

@@ -10,11 +10,19 @@ export async function GET(request) {
     if (!token) {
       return NextResponse.json({ 
         success: false,
-        error: 'Unauthorized' 
+        error: 'Authentication required. Please login first.' 
       }, { status: 401 })
     }
 
-    verifyToken(token)
+    try {
+      verifyToken(token)
+    } catch (authError) {
+      console.error('Token verification failed:', authError)
+      return NextResponse.json({ 
+        success: false,
+        error: 'Invalid or expired token. Please login again.' 
+      }, { status: 401 })
+    }
 
     const cabinets = await prisma.cabinet.findMany({
       include: {
