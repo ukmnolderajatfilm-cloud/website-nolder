@@ -12,12 +12,6 @@ export default function GalleryPage() {
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [selectedFilm, setSelectedFilm] = useState(null);
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    fetchFilms();
-  }, [fetchFilms]);
-
   const [films, setFilms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,17 +37,20 @@ export default function GalleryPage() {
         }));
         setFilms(transformedFilms);
       } else {
-        console.error('Error fetching films:', data.meta.message);
         // Fallback to default films if API fails
         setFilms([]);
       }
     } catch (error) {
-      console.error('Error fetching films:', error);
       setFilms([]);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    setMounted(true);
+    fetchFilms();
+  }, [fetchFilms]);
 
   // Helper function to extract video ID from YouTube URL
   const extractVideoId = (url) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from "next/image";
 // import Lenis from 'lenis'; // Disabled for better performance
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
@@ -28,8 +28,63 @@ export default function Home() {
   const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
   const [promoContentCount, setPromoContentCount] = useState(0);
   const [featuredFilms, setFeaturedFilms] = useState([]);
+  const [selectedFilm, setSelectedFilm] = useState(null);
+  const [dailyRandomFilms, setDailyRandomFilms] = useState([]);
   // const lenisRef = useRef(); // No longer needed
   const { scrollYProgress } = useScroll();
+
+  // Helper function to extract video ID from YouTube URL
+  const extractVideoId = (url) => {
+    if (!url) return 'R37-EC48yoc';
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    return match ? match[1] : 'R37-EC48yoc';
+  };
+
+  // Helper function to get daily random films for CardSwap
+  const getDailyRandomFilms = useCallback(async () => {
+    try {
+      console.log('🎬 Fetching daily random films from database...');
+      const response = await fetch('/api/films?status=all&per_page=50');
+      const data = await response.json();
+      
+      if (data.meta.status === 'success' && data.data.films.length > 0) {
+        // Shuffle array and take first 6 films
+        const shuffled = [...data.data.films].sort(() => 0.5 - Math.random());
+        const randomFilms = shuffled.slice(0, 6).map(film => ({
+          id: film.id,
+          title: film.filmTitle,
+          poster: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
+          trailerUrl: film.trailerUrl
+        }));
+        console.log('✅ Daily random films loaded:', randomFilms.map(f => f.title));
+        setDailyRandomFilms(randomFilms);
+      } else {
+        // Fallback to default films
+        console.log('⚠️ No films in database, using fallback films');
+        setDailyRandomFilms([
+          { id: 1, title: 'TBFSP', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+          { id: 2, title: 'Film Poster', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+          { id: 3, title: 'Nol Derajat', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+          { id: 4, title: 'Cinema', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+          { id: 5, title: 'Production', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+          { id: 6, title: 'Showcase', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null }
+        ]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching daily random films:', error);
+      // Fallback to default films
+      setDailyRandomFilms([
+        { id: 1, title: 'TBFSP', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+        { id: 2, title: 'Film Poster', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+        { id: 3, title: 'Nol Derajat', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+        { id: 4, title: 'Cinema', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+        { id: 5, title: 'Production', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
+        { id: 6, title: 'Showcase', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null }
+      ]);
+    }
+  }, []);
+
+
 
   // Disable Lenis Smooth Scroll for better performance
   // useEffect(() => {
@@ -75,7 +130,6 @@ export default function Home() {
           setFeaturedFilms(transformedFilms);
         }
       } catch (error) {
-        console.error('Error fetching featured films:', error);
         // Fallback to default items
         setFeaturedFilms([
           { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
@@ -90,6 +144,87 @@ export default function Home() {
 
     fetchFeaturedFilms();
   }, []);
+
+  // Fetch daily random films and setup daily reset
+  useEffect(() => {
+    const loadDailyRandomFilms = () => {
+      // Check if we have stored films for today
+      const today = new Date().toDateString();
+      const storedData = localStorage.getItem('dailyRandomFilms');
+      
+      if (storedData) {
+        const { date, films } = JSON.parse(storedData);
+        if (date === today && films.length > 0) {
+          setDailyRandomFilms(films);
+          return;
+        }
+      }
+      
+      // Load new random films
+      getDailyRandomFilms();
+    };
+
+    // Load films on mount
+    loadDailyRandomFilms();
+
+    // Setup daily reset at 00:00
+    const setupDailyReset = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+      
+      console.log(`Next reset scheduled in ${Math.round(timeUntilMidnight / 1000 / 60)} minutes at 00:00`);
+      
+      const resetTimer = setTimeout(() => {
+        console.log('🔄 Daily reset triggered at 00:00 - Loading new random films');
+        getDailyRandomFilms();
+        // Schedule next reset
+        setupDailyReset();
+      }, timeUntilMidnight);
+
+      return resetTimer;
+    };
+
+    const resetTimer = setupDailyReset();
+
+    return () => {
+      if (resetTimer) {
+        clearTimeout(resetTimer);
+      }
+    };
+  }, [getDailyRandomFilms]);
+
+  // Save daily random films to localStorage when they change
+  useEffect(() => {
+    if (dailyRandomFilms.length > 0) {
+      const today = new Date().toDateString();
+      localStorage.setItem('dailyRandomFilms', JSON.stringify({
+        date: today,
+        films: dailyRandomFilms
+      }));
+      console.log('💾 Daily random films saved to localStorage for', today);
+    }
+  }, [dailyRandomFilms]);
+
+  // Test function for manual reset (for development/testing)
+  const testDailyReset = () => {
+    console.log('🧪 Testing daily reset...');
+    localStorage.removeItem('dailyRandomFilms');
+    getDailyRandomFilms();
+  };
+
+  // Add test function to window for easy testing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.testDailyReset = testDailyReset;
+      console.log('🧪 Test function available: window.testDailyReset()');
+    }
+  }, [testDailyReset]);
+
+
 
   // Fetch promo content count with monthly reset
   useEffect(() => {
@@ -115,7 +250,7 @@ export default function Home() {
           }
         }
       } catch (error) {
-        console.error('Error fetching promo count:', error);
+        // Silently handle error
       }
     };
 
@@ -237,8 +372,8 @@ export default function Home() {
                     >
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[0]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[0]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           style={{ transform: 'scaleX(-1)' }}
@@ -247,8 +382,8 @@ export default function Home() {
                       </Card>
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[1]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[1]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           style={{ transform: 'scaleX(-1)' }}
@@ -257,8 +392,8 @@ export default function Home() {
                       </Card>
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[2]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[2]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           style={{ transform: 'scaleX(-1)' }}
@@ -282,8 +417,8 @@ export default function Home() {
                     >
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[3]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[3]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           loading="lazy"
@@ -291,8 +426,8 @@ export default function Home() {
                       </Card>
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[4]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[4]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           loading="lazy"
@@ -300,8 +435,8 @@ export default function Home() {
                       </Card>
                       <Card>
                         <Image
-                          src="/Images/poster-film/TBFSP.jpg"
-                          alt="Film Poster"
+                          src={dailyRandomFilms[5]?.poster || "/Images/poster-film/TBFSP.jpg"}
+                          alt={dailyRandomFilms[5]?.title || "Film Poster"}
                           fill
                           className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
                           loading="lazy"
@@ -345,7 +480,10 @@ export default function Home() {
                     scrollSpeed={1.5}
                     scrollEase={0.08}
                     autoScroll={false}
-                    onItemClick={() => setIsTrailerModalOpen(true)}
+                    onItemClick={(item) => {
+                      setSelectedFilm(item);
+                      setIsTrailerModalOpen(true);
+                    }}
                   />
                 </motion.div>
               </div>
@@ -508,8 +646,13 @@ export default function Home() {
         {/* Trailer Modal */}
         <TrailerModal 
           isOpen={isTrailerModalOpen} 
-          onClose={() => setIsTrailerModalOpen(false)}
-          videoId="R37-EC48yoc"
+          onClose={() => {
+            setIsTrailerModalOpen(false);
+            setSelectedFilm(null);
+          }}
+          videoId={selectedFilm?.trailerUrl ? extractVideoId(selectedFilm.trailerUrl) : "R37-EC48yoc"}
+          title={selectedFilm?.text || "TBFSP"}
+          subtitle="Official Trailer"
         />
 
         {/* Content Promo Modal */}

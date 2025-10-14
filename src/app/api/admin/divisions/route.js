@@ -34,7 +34,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching divisions:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -80,7 +79,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error creating division:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

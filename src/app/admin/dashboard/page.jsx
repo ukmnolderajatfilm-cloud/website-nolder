@@ -63,7 +63,6 @@ export default function AdminDashboard() {
         });
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -74,15 +73,12 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('admin-token');
       const user = localStorage.getItem('admin-user');
       
-      console.log('Dashboard auth check:', { isLoggedIn, token: token ? 'exists' : 'missing', user });
       
       if (isLoggedIn === 'true' && token && user) {
-        console.log('✅ Authenticated, loading dashboard');
         setAdminUser(user);
         setIsLoading(false);
         fetchStats(); // Fetch stats after authentication
       } else {
-        console.log('❌ Not authenticated, redirecting to login');
         // Clear any invalid data first
         localStorage.removeItem('admin-token');
         localStorage.removeItem('admin-user');
@@ -97,7 +93,6 @@ export default function AdminDashboard() {
     if (isLoggingOut) return; // Prevent multiple clicks
     
     setIsLoggingOut(true);
-    console.log('Starting logout process...');
     
     // Clear localStorage immediately to prevent race conditions
     localStorage.removeItem('admin-token');
@@ -107,7 +102,6 @@ export default function AdminDashboard() {
     // Clear cookie
     document.cookie = 'admin-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     
-    console.log('✅ Client-side cleanup complete');
     
     try {
       // Call logout API (non-blocking)
@@ -118,19 +112,14 @@ export default function AdminDashboard() {
         },
       }).then(response => {
         if (response.ok) {
-          console.log('✅ Logout API successful');
         } else {
-          console.log('⚠️ Logout API failed, but continuing');
         }
       }).catch(error => {
-        console.log('⚠️ Logout API error, but continuing:', error);
       });
     } catch (error) {
-      console.log('⚠️ Logout API error, but continuing:', error);
     }
     
     // Redirect immediately after clearing data
-    console.log('Redirecting to login...');
     window.location.href = '/admin/login';
   };
 

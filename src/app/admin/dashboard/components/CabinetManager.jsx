@@ -93,14 +93,12 @@ export default function CabinetManager() {
     setIsSubmitting(true);
     try {
       const id = cabinetId || editingCabinet?.id;
-      console.log('Updating cabinet:', id, cabinetData);
       
       if (!id) {
         throw new Error('Cabinet ID is required');
       }
       
       const result = await updateCabinet(id, cabinetData);
-      console.log('Update result:', result);
       
       if (result.success) {
         // If cabinet is being set to active, ensure only one active cabinet
@@ -116,11 +114,9 @@ export default function CabinetManager() {
           category: 'film'
         });
       } else {
-        console.error('Update failed:', result.error);
         alert('Error: ' + result.error);
       }
     } catch (error) {
-      console.error('Update error:', error);
       alert('Error updating cabinet: ' + error.message);
     } finally {
       setIsSubmitting(false);
@@ -150,33 +146,24 @@ export default function CabinetManager() {
   const handleCreateMember = async (memberData) => {
     const cabinet = selectedCabinet || activeCabinet;
     if (!cabinet) {
-      console.error('No cabinet selected');
       alert('No cabinet selected');
       return;
     }
     
-    console.log('Creating member with data:', memberData);
-    console.log('Cabinet ID:', cabinet.id);
     
     setIsSubmitting(true);
     try {
       const result = await addMember(cabinet.id, memberData);
-      console.log('Add member result:', result);
       
       if (result.success) {
-        console.log('Member created successfully');
         setShowMemberForm(false);
         setEditingMember(null);
         // Force refresh the cabinets data to ensure UI updates
         await fetchCabinets();
-        console.log('Data refreshed after create member');
       } else {
-        console.error('Add member failed:', result.error);
         alert('Error: ' + result.error);
       }
     } catch (error) {
-      console.error('Error creating member:', error);
-      console.error('Error details:', error.message, error.stack);
       alert('Error creating member: ' + error.message);
     } finally {
       setIsSubmitting(false);
@@ -191,37 +178,28 @@ export default function CabinetManager() {
   const handleUpdateMember = async (memberData) => {
     const cabinet = selectedCabinet || activeCabinet;
     if (!cabinet || !editingMember) {
-      console.error('Missing cabinet or editingMember');
       return;
     }
     
     if (!editingMember.id) {
-      console.error('Missing member ID:', editingMember);
       alert('Error: Member ID tidak ditemukan. Silakan coba lagi.');
       return;
     }
     
-    console.log('Updating member with data:', memberData);
-    console.log('Member ID:', editingMember.id, 'Cabinet ID:', cabinet.id);
     
     setIsSubmitting(true);
     try {
       const result = await updateMember(cabinet.id, editingMember.id, memberData);
-      console.log('Update member result:', result);
       
       if (result.success) {
-        console.log('Member updated successfully');
         setShowMemberForm(false);
         setEditingMember(null);
         // Force refresh the cabinets data to ensure UI updates
         await fetchCabinets();
-        console.log('Data refreshed after update member');
       } else {
-        console.error('Update member failed:', result.error);
         alert('Error: ' + result.error);
       }
     } catch (error) {
-      console.error('Error updating member:', error);
       alert('Error updating member: ' + error.message);
     } finally {
       setIsSubmitting(false);
@@ -233,17 +211,12 @@ export default function CabinetManager() {
       const cabinet = selectedCabinet || activeCabinet;
       if (!cabinet) return;
       
-      console.log('Deleting member:', memberId, 'from cabinet:', cabinet.id);
       const result = await deleteMember(cabinet.id, memberId);
-      console.log('Delete result:', result);
       
       if (result.success) {
-        console.log('Member deleted successfully, refreshing data...');
         // Force refresh the cabinets data to ensure UI updates
         await fetchCabinets();
-        console.log('Data refreshed after delete member');
       } else {
-        console.error('Delete member failed:', result.error);
         alert('Error: ' + result.error);
       }
     }
@@ -265,7 +238,6 @@ export default function CabinetManager() {
     
     // If multiple active cabinets, show warning and use the first one
     if (activeCabinets.length > 1) {
-      console.warn('Multiple active cabinets found. Using the first one:', activeCabinets[0].name);
     }
     
     // Only return active cabinet, not fallback to first cabinet
@@ -435,7 +407,6 @@ export default function CabinetManager() {
         });
       }
     } catch (error) {
-      console.error('Error ensuring single active cabinet:', error);
     }
   };
 

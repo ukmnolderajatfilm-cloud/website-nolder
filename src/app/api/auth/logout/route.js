@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    console.log('Logout API called');
     
     const response = NextResponse.json({ 
       success: true,
@@ -27,10 +26,8 @@ export async function POST() {
       path: '/'
     })
 
-    console.log('✅ Logout API completed successfully');
     return response
   } catch (error) {
-    console.error('❌ Logout error:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

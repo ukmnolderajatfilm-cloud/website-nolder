@@ -6,7 +6,6 @@ export async function POST(request) {
   try {
     const { username, password } = await request.json()
     
-    console.log('Login attempt:', { username, password: '***' })
 
     // Cari admin di database (case insensitive)
     const allAdmins = await prisma.admin.findMany({
@@ -17,7 +16,6 @@ export async function POST(request) {
     
     const admin = allAdmins.find(a => a.username.toLowerCase() === username.toLowerCase())
 
-    console.log('Admin found:', admin ? 'Yes' : 'No')
 
     if (!admin) {
       return NextResponse.json({ 
@@ -28,7 +26,6 @@ export async function POST(request) {
 
     // Verifikasi password
     const isValid = await verifyPassword(password, admin.password)
-    console.log('Password valid:', isValid)
 
     if (!isValid) {
       return NextResponse.json({ 
@@ -44,7 +41,6 @@ export async function POST(request) {
       role: admin.role 
     })
 
-    console.log('Token generated:', token ? 'Yes' : 'No')
 
     // Update last login
     await prisma.admin.update({
@@ -64,7 +60,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Login error:', error)
     return NextResponse.json({ 
       success: false,
       error: error.message 

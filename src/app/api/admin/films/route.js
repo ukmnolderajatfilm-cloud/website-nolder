@@ -69,7 +69,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching films:', error)
     return NextResponse.json({ 
       meta: {
         status: 'error',
@@ -121,7 +120,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error creating film:', error)
     return NextResponse.json({ 
       meta: {
         status: 'error',
@@ -215,7 +213,6 @@ export async function PUT(request) {
     })
 
   } catch (error) {
-    console.error('Error in bulk operation:', error)
     return NextResponse.json({ 
       meta: {
         status: 'error',

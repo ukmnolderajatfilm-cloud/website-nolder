@@ -26,7 +26,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching contents:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -63,7 +62,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error creating content:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

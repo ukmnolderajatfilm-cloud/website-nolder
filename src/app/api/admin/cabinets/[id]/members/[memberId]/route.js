@@ -57,7 +57,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error updating member:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Failed to update member: ' + error.message 
@@ -115,7 +114,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error deleting member:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

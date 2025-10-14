@@ -40,7 +40,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching promo contents:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

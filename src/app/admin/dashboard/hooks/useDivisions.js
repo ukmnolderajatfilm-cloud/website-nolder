@@ -19,7 +19,6 @@ export const useDivisions = () => {
       }
     } catch (err) {
       setError('Failed to fetch divisions');
-      console.error('Error fetching divisions:', err);
     } finally {
       setIsLoading(false);
     }

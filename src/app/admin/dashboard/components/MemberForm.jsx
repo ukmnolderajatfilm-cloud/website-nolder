@@ -58,7 +58,6 @@ export default function MemberForm({
       return;
     }
     
-    console.log('Submitting form data:', formData);
     await onSubmit(formData);
   };
 
@@ -90,7 +89,6 @@ export default function MemberForm({
         setImagePreview(URL.createObjectURL(file));
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
     } finally {
       setIsUploading(false);
     }

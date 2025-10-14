@@ -23,7 +23,7 @@ export async function GET(request) {
       include_deleted: false
     };
 
-    const result = await FilmService.getAll(filters);
+    const result = await FilmService.getAllFilms(filters);
 
     return NextResponse.json({
       meta: {
@@ -35,7 +35,6 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Error in GET /api/films/featured:', error);
     
     return NextResponse.json({
       meta: {

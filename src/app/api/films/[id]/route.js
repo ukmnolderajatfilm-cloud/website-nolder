@@ -41,7 +41,6 @@ export async function GET(request, { params }) {
     });
 
   } catch (error) {
-    console.error('Error in GET /api/films/[id]:', error);
     
     return NextResponse.json({
       meta: {

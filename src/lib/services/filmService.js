@@ -27,8 +27,21 @@ export class FilmService {
     }
     
     // Duration validation
-    if (!data.duration || isNaN(data.duration) || data.duration < 1 || data.duration > 500) {
-      errors.duration = 'Duration must be a number between 1 and 500 minutes'
+    if (!data.duration || (typeof data.duration === 'string' && data.duration.trim().length === 0)) {
+      errors.duration = 'Duration is required'
+    } else {
+      // Extract number from duration string (e.g., "120 min" -> 120) or use number directly
+      let durationValue
+      if (typeof data.duration === 'number') {
+        durationValue = data.duration
+      } else {
+        const durationMatch = data.duration.toString().match(/\d+/)
+        durationValue = durationMatch ? parseInt(durationMatch[0]) : NaN
+      }
+      
+      if (isNaN(durationValue) || durationValue < 1 || durationValue > 500) {
+        errors.duration = 'Duration must be a number between 1 and 500 minutes'
+      }
     }
     
     // Director validation
@@ -253,12 +266,21 @@ export class FilmService {
     }
 
     try {
+      // Extract duration number from string (e.g., "120 min" -> 120) or use number directly
+      let durationValue
+      if (typeof data.duration === 'number') {
+        durationValue = data.duration
+      } else {
+        const durationMatch = data.duration.toString().match(/\d+/)
+        durationValue = durationMatch ? parseInt(durationMatch[0]) : 0
+      }
+
       const film = await prisma.film.create({
         data: {
           filmTitle: data.film_title.trim(),
           filmGenre: data.film_genre.trim(),
           rating: parseFloat(data.rating),
-          duration: parseInt(data.duration),
+          duration: durationValue,
           director: data.director.trim(),
           releaseDate: new Date(data.release_date),
           status: data.status,
@@ -313,13 +335,22 @@ export class FilmService {
     }
 
     try {
+      // Extract duration number from string (e.g., "120 min" -> 120) or use number directly
+      let durationValue
+      if (typeof data.duration === 'number') {
+        durationValue = data.duration
+      } else {
+        const durationMatch = data.duration.toString().match(/\d+/)
+        durationValue = durationMatch ? parseInt(durationMatch[0]) : 0
+      }
+
       const film = await prisma.film.update({
         where: { id: parseInt(id) },
         data: {
           filmTitle: data.film_title.trim(),
           filmGenre: data.film_genre.trim(),
           rating: parseFloat(data.rating),
-          duration: parseInt(data.duration),
+          duration: durationValue,
           director: data.director.trim(),
           releaseDate: new Date(data.release_date),
           status: data.status,

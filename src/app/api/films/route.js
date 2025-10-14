@@ -15,6 +15,7 @@ export async function GET(request) {
     const search = searchParams.get('search') || '';
     const genre = searchParams.get('genre') || '';
     const status = searchParams.get('status') || 'now_showing'; // Default to now_showing for public
+    const statusFilter = status === 'all' ? '' : status; // If status is 'all', don't filter by status
     const sort_by = searchParams.get('sort_by') || 'releaseDate';
     const sort_order = searchParams.get('sort_order') || 'desc';
 
@@ -24,13 +25,13 @@ export async function GET(request) {
       per_page,
       search,
       genre,
-      status,
+      status: statusFilter,
       sort_by,
       sort_order,
       include_deleted: false // Don't show deleted films to public
     };
 
-    const result = await FilmService.getAll(filters);
+    const result = await FilmService.getAllFilms(filters);
 
     return NextResponse.json({
       meta: {
@@ -42,7 +43,6 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Error in GET /api/films:', error);
     
     return NextResponse.json({
       meta: {

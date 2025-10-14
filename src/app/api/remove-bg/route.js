@@ -25,7 +25,6 @@ export async function POST(request) {
 
     // Check if API key is configured
     if (!REMOVE_BG_API_KEY) {
-      console.warn('Remove.bg API key not configured, returning original image');
       return NextResponse.json({
         success: true,
         processedUrl: imageUrl,
@@ -47,7 +46,6 @@ export async function POST(request) {
 
     // Check if already processed (cache check)
     if (existsSync(processedPath)) {
-      console.log('Using cached processed image:', processedFilename);
       return NextResponse.json({
         success: true,
         processedUrl,
@@ -55,7 +53,6 @@ export async function POST(request) {
       });
     }
 
-    console.log('Processing image with Remove.bg:', originalFilename);
 
     // Get full URL for the image
     const fullImageUrl = imageUrl.startsWith('http') 
@@ -68,7 +65,6 @@ export async function POST(request) {
     // Save processed image
     await writeFile(processedPath, result);
 
-    console.log('Background removed successfully:', processedFilename);
 
     return NextResponse.json({
       success: true,
@@ -77,7 +73,6 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Error removing background:', error);
     
     // Return original image URL on error (graceful degradation)
     const formData = await request.formData();

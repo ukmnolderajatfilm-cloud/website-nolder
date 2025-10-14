@@ -62,10 +62,8 @@ export default function FilmManager() {
         setFilms(response.data.films);
         setPagination(response.data.pagination);
       } else {
-        console.error('Error fetching films:', response.meta.message);
       }
     } catch (error) {
-      console.error('Error fetching films:', error);
       // Show user-friendly error message
       alert(`Error loading films: ${error.message}`);
     } finally {
@@ -81,7 +79,6 @@ export default function FilmManager() {
         setMeta(response.data);
       }
     } catch (error) {
-      console.error('Error loading metadata:', error);
     }
   }, []);
 
@@ -159,7 +156,6 @@ export default function FilmManager() {
         alert(response.meta.message);
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
       alert('Failed to upload poster');
     } finally {
       setUploading(false);
@@ -199,7 +195,6 @@ export default function FilmManager() {
         alert(response.meta.message);
       }
     } catch (error) {
-      console.error('Error saving film:', error);
       alert('Failed to save film');
     }
   };
@@ -212,7 +207,7 @@ export default function FilmManager() {
       film_genre: film.filmGenre || '',
       status: film.status || '',
       rating: typeof film.rating === 'number' && !isNaN(film.rating) ? film.rating : 0,
-      duration: film.duration || '',
+      duration: film.duration ? `${film.duration} min` : '',
       director: film.director || '',
       release_date: film.releaseDate ? new Date(film.releaseDate).toISOString().split('T')[0] : '',
       poster_url: film.posterUrl || '',
@@ -234,7 +229,6 @@ export default function FilmManager() {
           alert(response.meta.message);
         }
       } catch (error) {
-        console.error('Error deleting film:', error);
         alert('Failed to delete film');
       }
     }
@@ -552,7 +546,6 @@ export default function FilmManager() {
                       alt={film.filmTitle}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.log('Image load error for film:', film.filmTitle, 'URL:', film.posterPath || film.posterUrl);
                         e.target.src = '/Images/poster-film/TBFSP.jpg';
                       }}
                     />

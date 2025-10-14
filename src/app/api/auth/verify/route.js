@@ -24,7 +24,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Token verification error:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Invalid token' 

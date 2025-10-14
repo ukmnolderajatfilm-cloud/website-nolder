@@ -34,7 +34,6 @@ export default function ContentManager() {
         setContents(data.contents);
       }
     } catch (error) {
-      console.error('Error fetching contents:', error);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +53,6 @@ export default function ContentManager() {
         setMonthlyStats(data.monthInfo);
       }
     } catch (error) {
-      console.error('Error fetching monthly stats:', error);
     }
   };
 
@@ -78,7 +76,6 @@ export default function ContentManager() {
         setImagePreview(URL.createObjectURL(file));
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
     } finally {
       setIsUploading(false);
     }
@@ -148,7 +145,6 @@ export default function ContentManager() {
         setImagePreview(null);
       }
     } catch (error) {
-      console.error('Error saving content:', error);
     }
   };
 
@@ -178,7 +174,6 @@ export default function ContentManager() {
           fetchContents();
         }
       } catch (error) {
-        console.error('Error deleting content:', error);
       }
     }
   };

@@ -45,7 +45,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error fetching film:', error)
     
     if (error.message === 'Film not found') {
       return NextResponse.json({ 
@@ -124,7 +123,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error updating film:', error)
     
     if (error.message === 'Film not found') {
       return NextResponse.json({ 
@@ -187,7 +185,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error deleting film:', error)
     
     if (error.message === 'Film not found') {
       return NextResponse.json({ 

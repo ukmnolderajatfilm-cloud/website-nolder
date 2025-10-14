@@ -23,7 +23,6 @@ const CabinetCarousel = () => {
           setCabinetData(processedCabinet);
         }
       } catch (error) {
-        console.error('Error fetching cabinet data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -43,11 +42,9 @@ const CabinetCarousel = () => {
     const skipBgRemoval = process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_ENABLE_BG_REMOVAL;
     
     if (skipBgRemoval) {
-      console.log('Background removal skipped in development mode');
       return cabinet;
     }
 
-    console.log('Processing', cabinet.members.length, 'member images...');
 
     // Process all images in parallel
     const processedMembers = await Promise.all(
@@ -69,7 +66,6 @@ const CabinetCarousel = () => {
           const result = await response.json();
 
           if (result.success && result.processedUrl && result.processedUrl !== member.image) {
-            console.log('✓ Background removed for:', member.name, result.cached ? '(cached)' : '(new)');
             return {
               ...member,
               image: result.processedUrl,
@@ -77,10 +73,8 @@ const CabinetCarousel = () => {
             };
           }
 
-          console.log('○ Using original image for:', member.name);
           return member;
         } catch (error) {
-          console.error('✗ Error processing image for', member.name, error);
           return member; // Return original on error
         }
       })
@@ -554,7 +548,7 @@ const CabinetCarousel = () => {
                 enableTilt={true}
                 enableMobileTilt={false}
                 divisionColor={currentDiv.color}
-                onContactClick={() => console.log(`Contact ${member.name} clicked`)}
+                onContactClick={() => {}}
               />
             </motion.div>
           ))}

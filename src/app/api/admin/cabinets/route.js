@@ -17,7 +17,6 @@ export async function GET(request) {
     try {
       verifyToken(token)
     } catch (authError) {
-      console.error('Token verification failed:', authError)
       return NextResponse.json({ 
         success: false,
         error: 'Invalid or expired token. Please login again.' 
@@ -41,7 +40,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching cabinets:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -82,7 +80,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error creating cabinet:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

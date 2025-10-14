@@ -79,7 +79,6 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
     
     return NextResponse.json({
       meta: {

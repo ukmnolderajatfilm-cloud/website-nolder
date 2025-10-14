@@ -43,7 +43,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error fetching cabinet:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -92,7 +91,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error updating cabinet:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -131,7 +129,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error deleting cabinet:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

@@ -21,12 +21,10 @@ export const useCabinet = () => {
         setError(data.error);
         // If authentication error, redirect to login
         if (response.status === 401) {
-          console.log('Authentication required, redirecting to login...');
           window.location.href = '/admin/login';
         }
       }
     } catch (err) {
-      console.error('Error fetching cabinets:', err);
       if (err.message === 'Failed to fetch') {
         setError('Network error. Please check your connection and try again.');
       } else {
@@ -123,7 +121,6 @@ export const useCabinet = () => {
         return { success: false, error: data.error };
       }
     } catch (err) {
-      console.error('Error adding member:', err);
       return { success: false, error: 'Failed to add member' };
     }
   };
@@ -146,7 +143,6 @@ export const useCabinet = () => {
         return { success: false, error: data.error };
       }
     } catch (err) {
-      console.error('Error updating member:', err);
       return { success: false, error: 'Failed to update member' };
     }
   };
@@ -167,7 +163,6 @@ export const useCabinet = () => {
         return { success: false, error: data.error };
       }
     } catch (err) {
-      console.error('Error deleting member:', err);
       return { success: false, error: 'Failed to delete member' };
     }
   };

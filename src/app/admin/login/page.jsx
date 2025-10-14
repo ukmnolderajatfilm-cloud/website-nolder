@@ -22,7 +22,6 @@ export default function AdminLogin() {
       localStorage.removeItem('admin-user');
       localStorage.removeItem('admin-logged-in');
       
-      console.log('Login page loaded, cleared existing data');
     }
   }, [router]);
 
@@ -31,23 +30,13 @@ export default function AdminLogin() {
     setIsLoading(true);
     setError('');
     
-    console.log('Login attempt:', { username, password: '***' });
-    console.log('Current localStorage before login:', {
-      token: localStorage.getItem('admin-token'),
-      user: localStorage.getItem('admin-user'),
-      loggedIn: localStorage.getItem('admin-logged-in')
-    });
 
     try {
-      console.log('🚀 Starting login request...');
-      console.log('Request URL:', '/api/auth/simple-login');
-      console.log('Request body:', credentials);
       
       // Create AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      console.log('📡 Making fetch request...');
       const response = await fetch('/api/auth/simple-login', {
         method: 'POST',
         headers: {
@@ -58,11 +47,6 @@ export default function AdminLogin() {
       });
 
       clearTimeout(timeoutId);
-      console.log('📡 Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
       
       // Check if response is ok
       if (!response.ok) {
@@ -70,10 +54,8 @@ export default function AdminLogin() {
       }
 
       const data = await response.json();
-      console.log('📄 Response data:', data);
 
       if (data.success) {
-        console.log('Login successful, saving data...');
         
         // Simpan token dan data ke localStorage
         localStorage.setItem('admin-token', data.token);
@@ -83,23 +65,14 @@ export default function AdminLogin() {
         // Set cookie juga untuk kompatibilitas
         document.cookie = `admin-token=${data.token}; path=/; max-age=604800`; // 7 days
         
-        console.log('✅ Data saved to localStorage');
-        console.log('Stored data:', {
-          token: localStorage.getItem('admin-token') ? 'exists' : 'missing',
-          user: localStorage.getItem('admin-user'),
-          loggedIn: localStorage.getItem('admin-logged-in')
-        });
         
         // Redirect langsung tanpa delay
-        console.log('Redirecting to dashboard...');
         window.location.href = '/admin/dashboard';
       } else {
-        console.log('Login failed:', data.error);
         setError(data.error || 'Login gagal');
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Login error:', error);
       
       if (error.name === 'AbortError') {
         setError('Request timeout. Silakan coba lagi.');

@@ -44,7 +44,6 @@ export default function ContentPromoModal({ isOpen, onClose }) {
         setMonthInfo(data.monthInfo);
       }
     } catch (error) {
-      console.error('Error fetching promo contents:', error);
     } finally {
       setIsLoading(false);
     }

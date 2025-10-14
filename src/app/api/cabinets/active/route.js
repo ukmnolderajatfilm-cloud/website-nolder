@@ -35,7 +35,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching active cabinet:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

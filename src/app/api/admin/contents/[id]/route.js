@@ -32,7 +32,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error updating content:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -65,7 +64,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error deleting content:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

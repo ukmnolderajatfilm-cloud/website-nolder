@@ -39,7 +39,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error fetching members:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 
@@ -73,7 +72,6 @@ export async function POST(request, { params }) {
 
     // Validate required fields
     if (!data.name || !data.position || !data.divisionId) {
-      console.log('Missing required fields:', { 
         name: data.name, 
         position: data.position, 
         divisionId: data.divisionId 
@@ -104,7 +102,6 @@ export async function POST(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error creating member:', error)
     return NextResponse.json({ 
       success: false,
       error: 'Server error' 

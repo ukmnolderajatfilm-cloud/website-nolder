@@ -194,7 +194,7 @@ const ProfileCardComponent = ({
               window.addEventListener('deviceorientation', deviceOrientationHandler);
             }
           })
-          .catch(err => console.error(err));
+          .catch(err => {});
       } else {
         window.addEventListener('deviceorientation', deviceOrientationHandler);
       }

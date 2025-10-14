@@ -41,7 +41,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching film stats:', error)
     return NextResponse.json({ 
       meta: {
         status: 'error',
