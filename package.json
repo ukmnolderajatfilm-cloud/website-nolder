@@ -10,7 +10,11 @@
     "db:reset": "node scripts/reset-and-seed.js",
     "db:seed": "node scripts/production-seed.js",
     "db:divisions": "node scripts/seed-divisions.js",
-    "db:setup": "node scripts/setup-db.js"
+    "db:setup": "node scripts/setup-db.js",
+    "db:railway": "node scripts/railway-setup.js",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

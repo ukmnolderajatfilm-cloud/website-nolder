@@ -23,18 +23,20 @@ export default function GalleryPage() {
       const data = await response.json();
       
       if (data.meta.status === 'success') {
-        // Transform API data to match component expectations
-        const transformedFilms = data.data.films.map(film => ({
-          id: film.id,
-          title: film.filmTitle,
-          subtitle: film.description ? film.description.substring(0, 50) + '...' : 'Film Description',
-          image: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
-          videoId: film.trailerUrl ? extractVideoId(film.trailerUrl) : 'R37-EC48yoc',
-          year: new Date(film.releaseDate).getFullYear().toString(),
-          genre: film.filmGenre,
-          description: film.description || 'No description available.',
-          status: film.status
-        }));
+        // Transform API data to match component expectations - only films with valid posters
+        const transformedFilms = data.data.films
+          .filter(film => film.posterPath || film.posterUrl) // Only include films with posters
+          .map(film => ({
+            id: film.id,
+            title: film.filmTitle,
+            subtitle: film.description ? film.description.substring(0, 50) + '...' : 'Film Description',
+            image: film.posterPath || film.posterUrl,
+            videoId: film.trailerUrl ? extractVideoId(film.trailerUrl) : 'R37-EC48yoc',
+            year: new Date(film.releaseDate).getFullYear().toString(),
+            genre: film.filmGenre,
+            description: film.description || 'No description available.',
+            status: film.status
+          }));
         setFilms(transformedFilms);
       } else {
         // Fallback to default films if API fails
@@ -88,15 +90,10 @@ export default function GalleryPage() {
       {/* DomeGalery Background */}
       <div className="fixed inset-0 z-0">
         <DomeGalery 
-          images={[
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'TBFSP' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Cinema Verite' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Urban Symphony' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Midnight Stories' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Golden Hour' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Retrospective' },
-            { src: '/Images/poster-film/TBFSP.jpg', alt: 'Frame by Frame' }
-          ]}
+          images={films.length > 0 ? films.map(film => ({
+            src: film.image,
+            alt: film.title
+          })) : []}
           fit={0.7}
           minRadius={800}
           maxRadius={1200}
@@ -239,7 +236,7 @@ export default function GalleryPage() {
           isOpen={isTrailerModalOpen} 
           onClose={handleCloseModal}
           videoId={selectedFilm?.videoId || "R37-EC48yoc"}
-          title={selectedFilm?.title || "TBFSP"}
+          title={selectedFilm?.title || "Film"}
           subtitle={selectedFilm?.subtitle || "Official Trailer"}
         />
       </Suspense>

@@ -546,7 +546,7 @@ export default function FilmManager() {
                       alt={film.filmTitle}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = '/Images/poster-film/TBFSP.jpg';
+                        e.target.style.display = 'none';
                       }}
                     />
                   ) : (
@@ -623,7 +623,7 @@ export default function FilmManager() {
                       alt={film.filmTitle}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = '/Images/poster-film/TBFSP.jpg';
+                        e.target.style.display = 'none';
                       }}
                     />
                   ) : (

@@ -71,10 +71,10 @@ export default function SettingsManager() {
   const sampleImages = [
     { id: 1, img: '/Images/nolder-logo.png', url: '#', height: 200 },
     { id: 2, img: '/Images/nolder-logo-item.png', url: '#', height: 150 },
-    { id: 3, img: '/Images/poster-film/TBFSP.jpg', url: '#', height: 250 },
+    { id: 3, img: '/uploads/1758954623342-jqnx11xrb3o.png', url: '#', height: 250 },
     { id: 4, img: '/Images/nolder-logo.png', url: '#', height: 180 },
     { id: 5, img: '/Images/nolder-logo-item.png', url: '#', height: 220 },
-    { id: 6, img: '/Images/poster-film/TBFSP.jpg', url: '#', height: 190 }
+    { id: 6, img: '/uploads/1758954779106-aw1kghckqi.jpg', url: '#', height: 190 }
   ];
 
   const sections = [

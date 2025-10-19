@@ -25,7 +25,7 @@ async function seedFilms() {
       releaseDate: new Date("2008-07-18"),
       status: "now_showing",
       description: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-      posterUrl: "/Images/poster-film/TBFSP.jpg",
+      posterUrl: "/uploads/1758954623342-jqnx11xrb3o.png",
       trailerUrl: "https://youtube.com/watch?v=EXeTwQWrcwY",
       adminId: admin.id
     },

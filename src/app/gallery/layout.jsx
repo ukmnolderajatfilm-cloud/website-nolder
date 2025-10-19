@@ -8,7 +8,6 @@ export const metadata = {
 export default function GalleryLayout({ children }) {
   return (
     <>
-      <link rel="preload" href="/Images/poster-film/TBFSP.jpg" as="image" />
       {children}
     </>
   );

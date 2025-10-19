@@ -11,6 +11,13 @@ import ProfileCard from "./Components/ProfileCard";
 import CabinetCarousel from "./Components/CabinetCarousel";
 import CardSwap, { Card } from "./Components/CardSwap";
 import CircularGallery from "./Components/CircularGalery";
+import LoadingSpinner from "./Components/LoadingSpinner";
+import ErrorMessage from "./Components/ErrorMessage";
+import LatestBlogSection from "./Components/LatestBlogSection";
+
+// Custom hooks for data fetching
+import { useFeaturedFilms, useDailyRandomFilms } from '../../lib/hooks/useFilms';
+import { usePromoContent } from '../../lib/hooks/usePromoContent';
 
 // Dynamic import untuk TrailerModal dan ContentPromoModal
 import dynamic from 'next/dynamic';
@@ -26,12 +33,14 @@ const ContentPromoModal = dynamic(() => import("./Components/ContentPromoModal")
 export default function Home() {
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [isContentPromoModalOpen, setIsContentPromoModalOpen] = useState(false);
-  const [promoContentCount, setPromoContentCount] = useState(0);
-  const [featuredFilms, setFeaturedFilms] = useState([]);
   const [selectedFilm, setSelectedFilm] = useState(null);
-  const [dailyRandomFilms, setDailyRandomFilms] = useState([]);
   // const lenisRef = useRef(); // No longer needed
   const { scrollYProgress } = useScroll();
+
+  // Use custom hooks for data fetching
+  const { films: featuredFilms, loading: featuredLoading, error: featuredError } = useFeaturedFilms();
+  const { films: dailyRandomFilms, loading: dailyLoading, error: dailyError, refetch: refetchDaily } = useDailyRandomFilms();
+  const { promoContent, promoCount, markAsSeen } = usePromoContent();
 
   // Helper function to extract video ID from YouTube URL
   const extractVideoId = (url) => {
@@ -40,234 +49,26 @@ export default function Home() {
     return match ? match[1] : 'R37-EC48yoc';
   };
 
-  // Helper function to get daily random films for CardSwap
-  const getDailyRandomFilms = useCallback(async () => {
-    try {
-      console.log('🎬 Fetching daily random films from database...');
-      const response = await fetch('/api/films?status=all&per_page=50');
-      const data = await response.json();
-      
-      if (data.meta.status === 'success' && data.data.films.length > 0) {
-        // Shuffle array and take first 6 films
-        const shuffled = [...data.data.films].sort(() => 0.5 - Math.random());
-        const randomFilms = shuffled.slice(0, 6).map(film => ({
-          id: film.id,
-          title: film.filmTitle,
-          poster: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
-          trailerUrl: film.trailerUrl
-        }));
-        console.log('✅ Daily random films loaded:', randomFilms.map(f => f.title));
-        setDailyRandomFilms(randomFilms);
-      } else {
-        // Fallback to default films
-        console.log('⚠️ No films in database, using fallback films');
-        setDailyRandomFilms([
-          { id: 1, title: 'TBFSP', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-          { id: 2, title: 'Film Poster', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-          { id: 3, title: 'Nol Derajat', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-          { id: 4, title: 'Cinema', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-          { id: 5, title: 'Production', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-          { id: 6, title: 'Showcase', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null }
-        ]);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching daily random films:', error);
-      // Fallback to default films
-      setDailyRandomFilms([
-        { id: 1, title: 'TBFSP', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-        { id: 2, title: 'Film Poster', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-        { id: 3, title: 'Nol Derajat', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-        { id: 4, title: 'Cinema', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-        { id: 5, title: 'Production', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null },
-        { id: 6, title: 'Showcase', poster: '/Images/poster-film/TBFSP.jpg', trailerUrl: null }
-      ]);
-    }
-  }, []);
 
 
-
-  // Disable Lenis Smooth Scroll for better performance
-  // useEffect(() => {
-  //     const lenis = new Lenis({
-  //       duration: 1.2,
-  //       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  //       direction: 'vertical',
-  //       gestureDirection: 'vertical',
-  //       smooth: true,
-  //       mouseMultiplier: 1,
-  //       smoothTouch: false,
-  //       touchMultiplier: 2,
-  //       infinite: false,
-  //     });
-
-  //     lenisRef.current = lenis;
-
-  //     function raf(time) {
-  //       lenis.raf(time);
-  //       requestAnimationFrame(raf);
-  //     }
-  //     requestAnimationFrame(raf);
-
-  //     return () => {
-  //       lenis.destroy();
-  //     };
-  // }, []);
-
-  // Fetch featured films
-  useEffect(() => {
-    const fetchFeaturedFilms = async () => {
-      try {
-        const response = await fetch('/api/films/featured?limit=6&status=now_showing');
-        const data = await response.json();
-        
-        if (data.meta.status === 'success') {
-          const transformedFilms = data.data.films.map(film => ({
-            image: film.posterPath || film.posterUrl || '/Images/poster-film/TBFSP.jpg',
-            text: film.filmTitle,
-            id: film.id,
-            trailerUrl: film.trailerUrl
-          }));
-          setFeaturedFilms(transformedFilms);
-        }
-      } catch (error) {
-        // Fallback to default items
-        setFeaturedFilms([
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'Film Poster' },
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'Nol Derajat' },
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'Cinema' },
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'Production' },
-          { image: '/Images/poster-film/TBFSP.jpg', text: 'Showcase' }
-        ]);
-      }
-    };
-
-    fetchFeaturedFilms();
-  }, []);
-
-  // Fetch daily random films and setup daily reset
-  useEffect(() => {
-    const loadDailyRandomFilms = () => {
-      // Check if we have stored films for today
-      const today = new Date().toDateString();
-      const storedData = localStorage.getItem('dailyRandomFilms');
-      
-      if (storedData) {
-        const { date, films } = JSON.parse(storedData);
-        if (date === today && films.length > 0) {
-          setDailyRandomFilms(films);
-          return;
-        }
-      }
-      
-      // Load new random films
-      getDailyRandomFilms();
-    };
-
-    // Load films on mount
-    loadDailyRandomFilms();
-
-    // Setup daily reset at 00:00
-    const setupDailyReset = () => {
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      
-      const timeUntilMidnight = tomorrow.getTime() - now.getTime();
-      
-      console.log(`Next reset scheduled in ${Math.round(timeUntilMidnight / 1000 / 60)} minutes at 00:00`);
-      
-      const resetTimer = setTimeout(() => {
-        console.log('🔄 Daily reset triggered at 00:00 - Loading new random films');
-        getDailyRandomFilms();
-        // Schedule next reset
-        setupDailyReset();
-      }, timeUntilMidnight);
-
-      return resetTimer;
-    };
-
-    const resetTimer = setupDailyReset();
-
-    return () => {
-      if (resetTimer) {
-        clearTimeout(resetTimer);
-      }
-    };
-  }, [getDailyRandomFilms]);
-
-  // Save daily random films to localStorage when they change
-  useEffect(() => {
-    if (dailyRandomFilms.length > 0) {
-      const today = new Date().toDateString();
-      localStorage.setItem('dailyRandomFilms', JSON.stringify({
-        date: today,
-        films: dailyRandomFilms
-      }));
-      console.log('💾 Daily random films saved to localStorage for', today);
-    }
-  }, [dailyRandomFilms]);
-
-  // Test function for manual reset (for development/testing)
+  // Test functions for development/testing
   const testDailyReset = () => {
     console.log('🧪 Testing daily reset...');
-    localStorage.removeItem('dailyRandomFilms');
-    getDailyRandomFilms();
+    refetchDaily();
   };
 
   // Add test function to window for easy testing
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.testDailyReset = testDailyReset;
-      console.log('🧪 Test function available: window.testDailyReset()');
+      console.log('🧪 Test function available:');
+      console.log('  - window.testDailyReset() - Test random films from database');
     }
   }, [testDailyReset]);
 
-
-
-  // Fetch promo content count with monthly reset
-  useEffect(() => {
-    const fetchPromoCount = async () => {
-      try {
-        const response = await fetch('/api/contents/promo');
-        const data = await response.json();
-        
-        if (data.success) {
-          const currentMonth = data.monthInfo.currentMonth;
-          const currentYear = data.monthInfo.currentYear;
-          const monthKey = `${currentYear}-${currentMonth}`;
-          
-          // Check if we've already shown notification for this month
-          const lastShownMonth = localStorage.getItem('nolder-last-shown-month');
-          const hasSeenThisMonth = lastShownMonth === monthKey;
-          
-          // Only show count if there are contents and user hasn't seen this month's content
-          if (data.contents.length > 0 && !hasSeenThisMonth) {
-            setPromoContentCount(data.contents.length);
-          } else {
-            setPromoContentCount(0);
-          }
-        }
-      } catch (error) {
-        // Silently handle error
-      }
-    };
-
-    fetchPromoCount();
-  }, []);
-
-  // Mark current month as seen when modal is opened
+  // Handle content promo modal opening
   const handleContentPromoOpen = () => {
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-    const monthKey = `${currentYear}-${currentMonth}`;
-    
-    // Mark this month as seen
-    localStorage.setItem('nolder-last-shown-month', monthKey);
-    setPromoContentCount(0); // Hide notification badge
-    
+    markAsSeen();
     setIsContentPromoModalOpen(true);
   };
 
@@ -326,7 +127,7 @@ export default function Home() {
           </section>
 
 
-          {/* SECTION 3: KABINET - Tim CINEVERSO */}
+          {/* SECTION 3: KABINET */}
           <section id="kabinet" className="relative py-32 px-8 sm:px-20">
             <div className="max-w-7xl mx-auto text-center">
               <motion.div
@@ -360,91 +161,77 @@ export default function Home() {
                 viewport={{ once: true }}
               >
                 {/* CardSwap Left Side (Mirrored) - Behind H2 */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl" style={{ transform: 'scaleX(-1)' }}>
-                  <div style={{ height: '500px', position: 'relative' }}>
-                    <CardSwap
-                      width={280}
-                      height={400}
-                      cardDistance={60}
-                      verticalDistance={70}
-                      delay={4500}
-                      pauseOnHover={false}
-                    >
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[0]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[0]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          style={{ transform: 'scaleX(-1)' }}
-                          loading="lazy"
-                        />
-                      </Card>
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[1]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[1]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          style={{ transform: 'scaleX(-1)' }}
-                          loading="lazy"
-                        />
-                      </Card>
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[2]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[2]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          style={{ transform: 'scaleX(-1)' }}
-                          loading="lazy"
-                        />
-                      </Card>
-                    </CardSwap>
+                {dailyLoading ? (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 -z-10 opacity-40">
+                    <LoadingSpinner message="Loading films..." />
                   </div>
-                </div>
+                ) : dailyError ? (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 -z-10 opacity-40">
+                    <ErrorMessage message={dailyError} onRetry={refetchDaily} />
+                  </div>
+                ) : (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl" style={{ transform: 'scaleX(-1)' }}>
+                    <div style={{ height: '500px', position: 'relative' }}>
+                      <CardSwap
+                        width={280}
+                        height={400}
+                        cardDistance={60}
+                        verticalDistance={70}
+                        delay={4500}
+                        pauseOnHover={false}
+                      >
+                        {dailyRandomFilms.slice(0, 3).map((film, index) => (
+                          <Card key={film.id}>
+                            <Image
+                              src={film.poster}
+                              alt={film.title}
+                              fill
+                              className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                              style={{ transform: 'scaleX(-1)' }}
+                              loading="lazy"
+                            />
+                          </Card>
+                        ))}
+                      </CardSwap>
+                    </div>
+                  </div>
+                )}
 
                 {/* CardSwap Right Side - Behind H2 */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl">
-                  <div style={{ height: '500px', position: 'relative' }}>
-                    <CardSwap
-                      width={280}
-                      height={400}
-                      cardDistance={60}
-                      verticalDistance={70}
-                      delay={6000}
-                      pauseOnHover={false}
-                    >
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[3]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[3]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          loading="lazy"
-                        />
-                      </Card>
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[4]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[4]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          loading="lazy"
-                        />
-                      </Card>
-                      <Card>
-                        <Image
-                          src={dailyRandomFilms[5]?.poster || "/Images/poster-film/TBFSP.jpg"}
-                          alt={dailyRandomFilms[5]?.title || "Film Poster"}
-                          fill
-                          className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
-                          loading="lazy"
-                        />
-                      </Card>
-                    </CardSwap>
+                {dailyLoading ? (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 -z-10 opacity-40">
+                    <LoadingSpinner message="Loading films..." />
                   </div>
-                </div>
+                ) : dailyError ? (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 -z-10 opacity-40">
+                    <ErrorMessage message={dailyError} onRetry={refetchDaily} />
+                  </div>
+                ) : (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 -z-10 opacity-40 pointer-events-none drop-shadow-2xl">
+                    <div style={{ height: '500px', position: 'relative' }}>
+                      <CardSwap
+                        width={280}
+                        height={400}
+                        cardDistance={60}
+                        verticalDistance={70}
+                        delay={6000}
+                        pauseOnHover={false}
+                      >
+                        {dailyRandomFilms.slice(3, 6).map((film, index) => (
+                          <Card key={film.id}>
+                            <Image
+                              src={film.poster}
+                              alt={film.title}
+                              fill
+                              className="object-cover rounded-xl brightness-110 contrast-125 saturate-110 will-change-transform"
+                              loading="lazy"
+                            />
+                          </Card>
+                        ))}
+                      </CardSwap>
+                    </div>
+                  </div>
+                )}
 
                 <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider relative z-10">
                   KARYA FILM
@@ -464,27 +251,26 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="w-full h-full"
                 >
-                  <CircularGallery
-                    items={featuredFilms.length > 0 ? featuredFilms : [
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'TBFSP' },
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Film Poster' },
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Nol Derajat' },
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Cinema' },
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Production' },
-                      { image: '/Images/poster-film/TBFSP.jpg', text: 'Showcase' }
-                    ]}
-                    bend={2}
-                    textColor="#fbbf24"
-                    borderRadius={0.08}
-                    font="bold 24px Inter"
-                    scrollSpeed={1.5}
-                    scrollEase={0.08}
-                    autoScroll={false}
-                    onItemClick={(item) => {
-                      setSelectedFilm(item);
-                      setIsTrailerModalOpen(true);
-                    }}
-                  />
+                  {featuredLoading ? (
+                    <LoadingSpinner message="Loading featured films..." />
+                  ) : featuredError ? (
+                    <ErrorMessage message={featuredError} />
+                  ) : (
+                    <CircularGallery
+                      items={featuredFilms}
+                      bend={2}
+                      textColor="#fbbf24"
+                      borderRadius={0.08}
+                      font="bold 24px Inter"
+                      scrollSpeed={1.5}
+                      scrollEase={0.08}
+                      autoScroll={false}
+                      onItemClick={(item) => {
+                        setSelectedFilm(item);
+                        setIsTrailerModalOpen(true);
+                      }}
+                    />
+                  )}
                 </motion.div>
               </div>
 
@@ -533,48 +319,8 @@ export default function Home() {
           </section>
 
 
-          {/* SECTION 5: PORTFOLIO - Logo Partners */}
-          <section id="portfolio" className="relative py-32 px-8 sm:px-20">
-            <div className="max-w-7xl mx-auto">
-              <motion.div
-                className="text-center mb-20"
-                initial={{ opacity: 0, y: 100 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                viewport={{ once: true }}
-              >
-                <h2 className="text-6xl sm:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-8 tracking-wider">
-                  KOLABORASI
-                </h2>
-                <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-8" />
-                <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-4xl mx-auto">
-                  Partner dan kolaborator yang telah bersama kami menciptakan karya-karya sinematik berkualitas
-                </p>
-              </motion.div>
-
-              {/* Partners Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                  <motion.div
-                    key={item}
-                    className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-500 p-6 flex items-center justify-center"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1, delay: item * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    <span className="text-yellow-400 text-sm font-semibold">Partner {item}</span>
-                  </motion.div>
-                ))}
-
-               
-
-                
-              </div>
-
-            </div>
-          </section>
+          {/* SECTION 5: LATEST BLOG POSTS */}
+          <LatestBlogSection />
 
 
           {/* Footer */}
@@ -618,9 +364,9 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
           >
             {/* Notification Badge */}
-            {promoContentCount > 0 && (
+            {promoCount > 0 && (
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                {promoContentCount}
+                {promoCount}
               </div>
             )}
             
@@ -651,7 +397,7 @@ export default function Home() {
             setSelectedFilm(null);
           }}
           videoId={selectedFilm?.trailerUrl ? extractVideoId(selectedFilm.trailerUrl) : "R37-EC48yoc"}
-          title={selectedFilm?.text || "TBFSP"}
+          title={selectedFilm?.text || "Film"}
           subtitle="Official Trailer"
         />
 

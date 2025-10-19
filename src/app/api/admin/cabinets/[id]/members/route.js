@@ -72,10 +72,6 @@ export async function POST(request, { params }) {
 
     // Validate required fields
     if (!data.name || !data.position || !data.divisionId) {
-        name: data.name, 
-        position: data.position, 
-        divisionId: data.divisionId 
-      });
       return NextResponse.json({ 
         success: false,
         error: 'Missing required fields: name, position, and divisionId are required' 

@@ -32,6 +32,24 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# secrets and sensitive files
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+admin-credentials.txt
+database-credentials.txt
+
+# production configs (keep these for deployment)
+# railway.json - KEEP for Railway deployment
+# nixpacks.toml - KEEP for Railway deployment
+# env.production.example - KEEP as template
 
 # vercel
 .vercel

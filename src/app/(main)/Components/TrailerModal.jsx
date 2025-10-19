@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // import { X } from 'lucide-react';
 
-const TrailerModal = ({ isOpen, onClose, videoId = "R37-EC48yoc", title = "TBFSP", subtitle = "Official Trailer" }) => {
+const TrailerModal = ({ isOpen, onClose, videoId = "R37-EC48yoc", title = "Film", subtitle = "Official Trailer" }) => {
   // Convert YouTube URL to embed format
   const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
 
