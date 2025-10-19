@@ -14,6 +14,8 @@
     "db:railway": "node scripts/railway-setup.js",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
+    "blog:setup": "node scripts/setup-blog-system.js",
+    "blog:seed": "node scripts/seed-blog-data.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -21,6 +23,14 @@
     "@prisma/client": "^6.16.2",
     "@react-three/drei": "^10.5.1",
     "@react-three/fiber": "^9.2.0",
+    "@tiptap/extension-color": "^3.7.2",
+    "@tiptap/extension-image": "^3.7.2",
+    "@tiptap/extension-link": "^3.7.2",
+    "@tiptap/extension-placeholder": "^3.7.2",
+    "@tiptap/extension-text-align": "^3.7.2",
+    "@tiptap/extension-text-style": "^3.7.2",
+    "@tiptap/react": "^3.7.2",
+    "@tiptap/starter-kit": "^3.7.2",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -37,7 +47,9 @@
     "remove.bg": "^1.3.0",
     "tailwind-merge": "^3.3.1",
     "three": "^0.167.1",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

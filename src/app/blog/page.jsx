@@ -60,9 +60,9 @@ const BlogPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black overflow-x-hidden">
       {/* Header Section */}
-      <section className="relative py-20 px-8 sm:px-20">
+      <section className="relative py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <nav className="mb-8">
@@ -79,40 +79,40 @@ const BlogPage = () => {
 
           {/* Page Title */}
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-12 sm:mb-16"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl sm:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-6 tracking-wider">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 mb-4 sm:mb-6 tracking-wider leading-tight">
               ARTIKEL & INSIGHT
             </h1>
-            <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-6" />
-            <p className="text-xl sm:text-2xl text-gray-200 font-light max-w-3xl mx-auto">
+            <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mb-4 sm:mb-6" />
+            <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-200 font-light max-w-4xl mx-auto px-4">
               Eksplorasi wawasan sinematik, cerita di balik layar, dan inspirasi kreatif dari Nol Derajat Film
             </p>
           </motion.div>
 
           {/* Search and Filter Section */}
           <motion.div
-            className="mb-12"
+            className="mb-8 sm:mb-12"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-between">
               {/* Search Bar */}
-              <form onSubmit={handleSearch} className="flex-1 max-w-md">
+              <form onSubmit={handleSearch} className="flex-1 max-w-md w-full">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Cari artikel..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-yellow-400 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-yellow-400 focus:outline-none transition-colors text-sm sm:text-base"
                   />
                   <svg
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -123,12 +123,12 @@ const BlogPage = () => {
               </form>
 
               {/* Category Filter */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center lg:justify-end w-full lg:w-auto">
                 {categories.map((category) => (
                   <button
                     key={category.value}
                     onClick={() => handleCategoryChange(category.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
                       selectedCategory === category.value
                         ? 'bg-yellow-400 text-black'
                         : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 hover:text-white'
@@ -144,7 +144,7 @@ const BlogPage = () => {
       </section>
 
       {/* Blog Posts Grid */}
-      <section className="py-12 px-8 sm:px-20">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <LoadingSpinner message="Loading articles..." />
@@ -176,7 +176,7 @@ const BlogPage = () => {
               </div>
 
               {/* Blog Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
                 {filteredPosts.map((post, index) => (
                   <motion.div
                     key={post.id}

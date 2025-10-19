@@ -7,15 +7,15 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect ke login page
-    router.push('/admin/login');
+    // Redirect to dashboard
+    router.push('/admin/dashboard');
   }, [router]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400">Redirecting to login...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-300">Redirecting to admin dashboard...</p>
       </div>
     </div>
   );

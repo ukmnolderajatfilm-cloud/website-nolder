@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { FilmService } from '../../../lib/services/filmService';
+import { logger, performance } from '../../../lib/logger';
 
 /**
  * GET /api/films
  * Public endpoint to get films for display on website
  */
 export async function GET(request) {
+  const startTime = Date.now();
+  
   try {
     const { searchParams } = new URL(request.url);
     
@@ -19,8 +22,8 @@ export async function GET(request) {
     const sort_by = searchParams.get('sort_by') || 'releaseDate';
     const sort_order = searchParams.get('sort_order') || 'desc';
 
-    // Build filters
-    const filters = {
+    // Log API request
+    logger.info('Films API request', {
       page,
       per_page,
       search,
@@ -28,10 +31,33 @@ export async function GET(request) {
       status: statusFilter,
       sort_by,
       sort_order,
-      include_deleted: false // Don't show deleted films to public
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent')
+    });
+
+    // Build filters
+    const filters = {
+      page,
+      perPage: per_page,
+      search,
+      genre,
+      status: statusFilter,
+      sortBy: sort_by,
+      sortOrder: sort_order,
+      includeDeleted: false // Don't show deleted films to public
     };
 
     const result = await FilmService.getAllFilms(filters);
+
+    const responseTime = Date.now() - startTime;
+    performance('Films API Response', responseTime, {
+      totalFilms: result?.total || 0,
+      page,
+      per_page,
+      search,
+      genre,
+      status: statusFilter
+    });
 
     return NextResponse.json({
       meta: {
@@ -43,6 +69,13 @@ export async function GET(request) {
     });
 
   } catch (error) {
+    logger.error('Films API error', {
+      error: error.message,
+      stack: error.stack,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent'),
+      timestamp: new Date().toISOString()
+    });
     
     return NextResponse.json({
       meta: {

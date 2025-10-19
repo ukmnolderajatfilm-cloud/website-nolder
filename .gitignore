@@ -43,6 +43,10 @@ secrets/
 *.pem
 *.p12
 *.pfx
+
+# log files
+logs/
+*.log
 admin-credentials.txt
 database-credentials.txt
 

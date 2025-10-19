@@ -25,21 +25,26 @@ const BlogDetailPage = () => {
         
         const response = await blogService.getPostBySlug(params.slug);
         
-        if (response.success) {
+        if (response.success && response.data && response.data.post) {
           setPost(response.data.post);
           
           // Fetch related posts
-          const relatedResponse = await blogService.getAllPosts({
-            limit: 3,
-            category: response.data.post.category.toLowerCase().replace(' ', '-')
-          });
-          
-          if (relatedResponse.success) {
-            const filtered = relatedResponse.data.posts.filter(p => p.slug !== params.slug);
-            setRelatedPosts(filtered.slice(0, 3));
+          try {
+            const relatedResponse = await blogService.getAllPosts({
+              limit: 3,
+              category: response.data.post.category?.toLowerCase().replace(' ', '-')
+            });
+            
+            if (relatedResponse.success) {
+              const filtered = relatedResponse.data.posts.filter(p => p.slug !== params.slug);
+              setRelatedPosts(filtered.slice(0, 3));
+            }
+          } catch (relatedError) {
+            console.warn('Failed to fetch related posts:', relatedError);
+            // Don't throw error for related posts
           }
         } else {
-          throw new Error(response.message || 'Post not found');
+          throw new Error(response.meta?.message || 'Post not found');
         }
       } catch (err) {
         setError(err.message);
@@ -241,43 +246,18 @@ const BlogDetailPage = () => {
       <article className="px-8 sm:px-20 pb-20">
         <div className="max-w-4xl mx-auto">
           <motion.div
-            className="blog-content prose prose-invert prose-lg max-w-none"
+            className="blog-content"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {/* For now, we'll use the excerpt as content since we don't have full content in the API */}
-            <p className="text-xl leading-relaxed mb-8 text-gray-200">
-              {post.excerpt}
-            </p>
-            
-            {/* Sample content - in production, this would come from post.content */}
-            <div className="space-y-6 text-gray-200">
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-              </p>
-              
-              <h2>Understanding the Fundamentals</h2>
-              <p>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
-              
-              <blockquote>
-                "The art of storytelling lies not in the words we use, but in the emotions we evoke and the connections we forge with our audience."
-              </blockquote>
-              
-              <h3>Key Takeaways</h3>
-              <ul>
-                <li>Focus on character development and emotional resonance</li>
-                <li>Use visual composition to enhance narrative impact</li>
-                <li>Create compelling dialogue that feels natural</li>
-                <li>Pay attention to pacing and rhythm</li>
-              </ul>
-              
-              <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-              </p>
-            </div>
+            {/* Display actual content from database */}
+            <div 
+              className="prose prose-invert prose-lg max-w-none text-white"
+              dangerouslySetInnerHTML={{ 
+                __html: post.content?.replace(/\n/g, '<br/>') || post.excerpt || 'No content available'
+              }}
+            />
           </motion.div>
         </div>
       </article>

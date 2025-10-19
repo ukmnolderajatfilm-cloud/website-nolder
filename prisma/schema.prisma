@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -27,6 +27,7 @@ model Admin {
   projects Project[]
   cabinets Cabinet[]
   films Film[]
+  articles Article[]
 
   @@map("admins")
 }
@@ -149,5 +150,70 @@ model Film {
 enum FilmStatus {
   coming_soon
   now_showing
+  archived
+}
+
+model ArticleCategory {
+  id           Int       @id @default(autoincrement())
+  categoryName String    @map("category_name")
+  slug         String    @unique
+  description  String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  articles Article[]
+
+  @@map("article_categories")
+}
+
+model Article {
+  id            Int            @id @default(autoincrement())
+  title         String
+  slug          String         @unique
+  excerpt       String?        @db.Text
+  content       String         @db.Text
+  bannerImage   String?        @map("banner_image")
+  status        ArticleStatus  @default(draft)
+  publishedAt   DateTime?      @map("published_at")
+  readTime      Int?           @map("read_time") // in minutes
+  viewCount     Int            @default(0) @map("view_count")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  deletedAt     DateTime?      @map("deleted_at")
+  
+  // Foreign Keys
+  categoryId    Int            @map("category_id")
+  category      ArticleCategory @relation(fields: [categoryId], references: [id])
+  adminId       Int            @map("admin_id")
+  admin         Admin          @relation(fields: [adminId], references: [id])
+
+  // Relations
+  images        ArticleImage[]
+
+  @@map("articles")
+}
+
+model ArticleImage {
+  id          Int      @id @default(autoincrement())
+  imageUrl    String   @map("image_url")
+  imagePath   String   @map("image_path")
+  altText     String?  @map("alt_text")
+  caption     String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Foreign Keys
+  articleId   Int      @map("article_id")
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@map("article_images")
+}
+
+enum ArticleStatus {
+  draft
+  published
   archived
 }

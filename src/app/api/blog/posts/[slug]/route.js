@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-
-// Sample blog posts data - in production, this would come from a database
+import prisma from '@/lib/prisma';
 const sampleBlogPosts = [
   {
     id: 1,
@@ -127,12 +126,47 @@ const sampleBlogPosts = [
 
 export async function GET(request, { params }) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     
-    // Find the post by slug
-    const post = sampleBlogPosts.find(p => p.slug === slug);
+    // Find the post by slug from database
+    const post = await prisma.article.findFirst({
+      where: {
+        slug: slug,
+        status: 'published',
+        deletedAt: null
+      },
+      include: {
+        category: true,
+        admin: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        images: {
+          orderBy: {
+            order: 'asc'
+          }
+        }
+      }
+    });
     
     if (!post) {
+      // Fallback to sample data if not found in database
+      const samplePost = sampleBlogPosts.find(p => p.slug === slug);
+      if (samplePost) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            post: samplePost
+          },
+          meta: {
+            status: 'success',
+            message: 'Post retrieved from sample data'
+          }
+        });
+      }
+      
       return NextResponse.json({
         success: false,
         data: null,
@@ -143,10 +177,28 @@ export async function GET(request, { params }) {
       }, { status: 404 });
     }
 
+    // Format the response to match expected structure
+    const formattedPost = {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      content: post.content,
+      featuredImage: post.bannerImage,
+      category: post.category?.categoryName || 'Uncategorized',
+      author: post.admin?.name || 'Unknown',
+      publishedAt: post.publishedAt,
+      readTime: post.readTime,
+      viewCount: post.viewCount,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      images: post.images || []
+    };
+
     return NextResponse.json({
       success: true,
       data: {
-        post: post
+        post: formattedPost
       },
       meta: {
         status: 'success',
@@ -156,6 +208,23 @@ export async function GET(request, { params }) {
 
   } catch (error) {
     console.error('Error fetching blog post:', error);
+    
+    // Fallback to sample data on error
+    const { slug } = await params;
+    const samplePost = sampleBlogPosts.find(p => p.slug === slug);
+    if (samplePost) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          post: samplePost
+        },
+        meta: {
+          status: 'success',
+          message: 'Post retrieved from sample data (fallback)'
+        }
+      });
+    }
+    
     return NextResponse.json({
       success: false,
       data: null,

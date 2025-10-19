@@ -7,6 +7,7 @@ import ContentManager from './components/ContentManager';
 import FilmManager from './components/FilmManager';
 import SettingsManager from './components/SettingsManager';
 import CabinetManager from './components/CabinetManager';
+import BlogManager from './components/BlogManager';
 
 export default function AdminDashboard() {
   const [adminUser, setAdminUser] = useState('');
@@ -18,6 +19,10 @@ export default function AdminDashboard() {
     totalVideos: 0,
     totalFollowers: 0,
     engagement: 0,
+    totalArticles: 0,
+    publishedArticles: 0,
+    draftArticles: 0,
+    totalCategories: 0,
     recentActivity: []
   });
   const router = useRouter();
@@ -25,18 +30,45 @@ export default function AdminDashboard() {
   // Fetch dashboard stats
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/contents');
-      const data = await response.json();
+      // Fetch content stats
+      const contentResponse = await fetch('/api/admin/contents');
+      const contentData = await contentResponse.json();
       
-      if (data.success) {
-        const contents = data.contents || [];
+      // Fetch blog stats
+      const blogResponse = await fetch('/api/admin/articles?limit=100');
+      const blogData = await blogResponse.json();
+      
+      // Fetch category stats
+      const categoryResponse = await fetch('/api/admin/categories');
+      const categoryData = await categoryResponse.json();
+      
+      if (contentData.success) {
+        const contents = contentData.contents || [];
         const publishedContents = contents.filter(content => content.isPublished);
+        
+        let blogStats = {
+          totalArticles: 0,
+          publishedArticles: 0,
+          draftArticles: 0,
+          totalCategories: 0
+        };
+        
+        if (blogData.success) {
+          const articles = blogData.data?.articles || [];
+          blogStats = {
+            totalArticles: articles.length,
+            publishedArticles: articles.filter(article => article.status === 'published').length,
+            draftArticles: articles.filter(article => article.status === 'draft').length,
+            totalCategories: categoryData.success ? (categoryData.data?.categories?.length || 0) : 0
+          };
+        }
         
         setStats({
           totalProjects: contents.length,
           totalVideos: contents.filter(content => content.platform === 'youtube').length,
           totalFollowers: 2400, // Mock data - bisa diambil dari analytics API
           engagement: Math.round((publishedContents.length / Math.max(contents.length, 1)) * 100),
+          ...blogStats,
           recentActivity: [
             {
               id: 1,
@@ -47,13 +79,20 @@ export default function AdminDashboard() {
             },
             {
               id: 2,
+              type: 'blog_post',
+              message: 'New blog article published',
+              time: '3 hours ago',
+              status: 'completed'
+            },
+            {
+              id: 3,
               type: 'gallery_update',
               message: 'Gallery updated',
               time: '5 hours ago',
               status: 'completed'
             },
             {
-              id: 3,
+              id: 4,
               type: 'settings_change',
               message: 'Settings modified',
               time: '1 day ago',
@@ -63,16 +102,16 @@ export default function AdminDashboard() {
         });
       }
     } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   };
 
   // Cek autentikasi
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const checkAuth = () => {
       const isLoggedIn = localStorage.getItem('admin-logged-in');
       const token = localStorage.getItem('admin-token');
       const user = localStorage.getItem('admin-user');
-      
       
       if (isLoggedIn === 'true' && token && user) {
         setAdminUser(user);
@@ -86,7 +125,9 @@ export default function AdminDashboard() {
         // Redirect to login
         window.location.href = '/admin/login';
       }
-    }
+    };
+
+    checkAuth();
   }, [router]);
 
   const handleLogout = async () => {
@@ -249,6 +290,16 @@ export default function AdminDashboard() {
                 Manage Kabinet
               </button>
               <button
+                onClick={() => setActiveTab('blog')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'blog'
+                    ? 'border-yellow-500 text-yellow-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Blog Management
+              </button>
+              <button
                 onClick={() => setActiveTab('settings')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'settings'
@@ -312,6 +363,17 @@ export default function AdminDashboard() {
                               <span className="text-sm text-gray-300">Videos</span>
                             </div>
                             <p className="text-2xl font-bold text-white">{stats.totalVideos}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-300">Blog Articles</span>
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stats.totalArticles}</p>
                           </div>
                         </div>
                         <div className="space-y-4">
@@ -392,6 +454,18 @@ export default function AdminDashboard() {
                               <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
                             <span className="text-white font-medium">Manage Kabinet</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setActiveTab('blog')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-orange-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                            </svg>
+                            <span className="text-white font-medium">Blog Management</span>
                           </div>
                         </button>
                         
@@ -531,6 +605,10 @@ export default function AdminDashboard() {
 
           {activeTab === 'cabinet' && (
             <CabinetManager />
+          )}
+
+          {activeTab === 'blog' && (
+            <BlogManager />
           )}
 
           {activeTab === 'settings' && (

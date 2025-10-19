@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { logger, performance } from '../../../../lib/logger';
+import { prisma } from '../../../../lib/db.js';
 
-// Sample blog posts data - in production, this would come from a database
+// Fallback sample blog posts data
 const sampleBlogPosts = [
   {
     id: 1,
@@ -95,6 +97,8 @@ const sampleBlogPosts = [
 ];
 
 export async function GET(request) {
+  const startTime = Date.now();
+  
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 12;
@@ -103,38 +107,132 @@ export async function GET(request) {
     const category = searchParams.get('category');
     const sort = searchParams.get('sort') || 'latest';
 
-    // Filter posts by status
-    let filteredPosts = sampleBlogPosts.filter(post => post.status === status);
+    // Log API request
+    logger.info('Blog posts API request', {
+      limit,
+      page,
+      status,
+      category,
+      sort,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent')
+    });
 
-    // Filter by category if provided
-    if (category) {
-      filteredPosts = filteredPosts.filter(post => 
-        post.category.toLowerCase() === category.toLowerCase()
-      );
+    let posts = [];
+    let totalPosts = 0;
+    let totalPages = 0;
+
+    try {
+      // Try to fetch from database first
+      const where = {
+        deletedAt: null,
+        status: status
+      };
+
+      // Add category filter if provided
+      if (category) {
+        where.category = {
+          slug: category
+        };
+      }
+
+      // Get total count
+      totalPosts = await prisma.article.count({ where });
+
+      // Get articles with pagination
+      const articles = await prisma.article.findMany({
+        where,
+        include: {
+          category: {
+            select: {
+              id: true,
+              categoryName: true,
+              slug: true
+            }
+          },
+          admin: {
+            select: {
+              id: true,
+              username: true,
+              name: true
+            }
+          }
+        },
+        orderBy: {
+          publishedAt: sort === 'oldest' ? 'asc' : 'desc'
+        },
+        skip: (page - 1) * limit,
+        take: limit
+      });
+
+      // Transform articles to match expected format
+      posts = articles.map(article => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt || '',
+        content: article.content,
+        featuredImage: article.bannerImage || '',
+        author: article.admin.name || article.admin.username || 'Nol Derajat Film',
+        category: article.category.categoryName,
+        readTime: article.readTime ? `${article.readTime} min read` : '5 min read',
+        status: article.status,
+        publishedAt: article.publishedAt?.toISOString() || article.createdAt.toISOString(),
+        createdAt: article.createdAt.toISOString(),
+        updatedAt: article.updatedAt.toISOString()
+      }));
+
+      totalPages = Math.ceil(totalPosts / limit);
+
+    } catch (dbError) {
+      logger.warn('Database error, falling back to sample data', {
+        error: dbError.message,
+        timestamp: new Date().toISOString()
+      });
+
+      // Fallback to sample data
+      let filteredPosts = sampleBlogPosts.filter(post => post.status === status);
+
+      // Filter by category if provided
+      if (category) {
+        filteredPosts = filteredPosts.filter(post => 
+          post.category.toLowerCase() === category.toLowerCase()
+        );
+      }
+
+      // Sort posts
+      if (sort === 'latest') {
+        filteredPosts.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+      } else if (sort === 'oldest') {
+        filteredPosts.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+      }
+
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      posts = filteredPosts.slice(startIndex, endIndex);
+
+      // Calculate pagination info
+      totalPosts = filteredPosts.length;
+      totalPages = Math.ceil(totalPosts / limit);
     }
 
-    // Sort posts
-    if (sort === 'latest') {
-      filteredPosts.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-    } else if (sort === 'oldest') {
-      filteredPosts.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
-    }
-
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
-
-    // Calculate pagination info
-    const totalPosts = filteredPosts.length;
-    const totalPages = Math.ceil(totalPosts / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
+
+    const responseTime = Date.now() - startTime;
+    performance('Blog Posts API Response', responseTime, {
+      totalPosts,
+      returnedPosts: posts.length,
+      page,
+      limit,
+      category
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        posts: paginatedPosts,
+        posts,
         pagination: {
           currentPage: page,
           totalPages,
@@ -151,7 +249,14 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Error fetching blog posts:', error);
+    logger.error('Blog posts API error', {
+      error: error.message,
+      stack: error.stack,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent'),
+      timestamp: new Date().toISOString()
+    });
+    
     return NextResponse.json({
       success: false,
       data: null,
