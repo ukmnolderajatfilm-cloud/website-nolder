@@ -10,16 +10,15 @@ export default function FilmManager() {
   const [showModal, setShowModal] = useState(false);
   const [editingFilm, setEditingFilm] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('title'); // 'title', 'date', 'status', 'rating'
+  const [sortBy, setSortBy] = useState('title'); // 'title', 'date', 'status'
   const [filterGenre, setFilterGenre] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list'
   const [formData, setFormData] = useState({
     film_title: '',
     description: '',
-    film_genre: 'action',
+    genres: [],
     status: 'coming_soon',
-    rating: 0,
     duration: '',
     director: '',
     release_date: '',
@@ -39,11 +38,13 @@ export default function FilmManager() {
   });
   
   const [meta, setMeta] = useState({ genres: [], directors: [], statuses: [] });
+  const [availableGenres, setAvailableGenres] = useState([]);
 
 
   // Fetch films
   const fetchFilms = useCallback(async (page = 1, newFilters = {}) => {
     try {
+      console.log(`FilmManager: Fetching films - page: ${page}, filters:`, newFilters)
       setIsLoading(true);
       const params = {
         page,
@@ -56,14 +57,19 @@ export default function FilmManager() {
         ...newFilters
       };
 
+      console.log('FilmManager: API params:', params)
       const response = await FilmAPI.getAll(params);
+      console.log('FilmManager: API response:', response)
       
       if (response.meta.status === 'success') {
+        console.log(`FilmManager: Successfully loaded ${response.data.films.length} films`)
         setFilms(response.data.films);
         setPagination(response.data.pagination);
       } else {
+        console.error('FilmManager: API returned error:', response.meta.message)
       }
     } catch (error) {
+      console.error('FilmManager: Error fetching films:', error)
       // Show user-friendly error message
       alert(`Error loading films: ${error.message}`);
     } finally {
@@ -82,10 +88,26 @@ export default function FilmManager() {
     }
   }, []);
 
+  // Load available genres
+  const loadGenres = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/genres', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.meta.status === 'success') {
+        setAvailableGenres(data.data.genres);
+      }
+    } catch (error) {
+      console.error('Error loading genres:', error);
+    }
+  }, []);
+
   useEffect(() => {
     loadMeta();
+    loadGenres();
     fetchFilms(1);
-  }, [loadMeta, fetchFilms]);
+  }, [loadMeta, loadGenres, fetchFilms]);
 
   useEffect(() => {
     fetchFilms(1);
@@ -180,9 +202,8 @@ export default function FilmManager() {
         setFormData({
           film_title: '',
           description: '',
-          film_genre: 'action',
+          genres: [],
           status: 'coming_soon',
-          rating: 0,
           duration: '',
           director: '',
           release_date: '',
@@ -204,9 +225,8 @@ export default function FilmManager() {
     setFormData({
       film_title: film.filmTitle || '',
       description: film.description || '',
-      film_genre: film.filmGenre || '',
+      genres: film.filmGenres ? film.filmGenres.map(fg => fg.genre.id) : [],
       status: film.status || '',
-      rating: typeof film.rating === 'number' && !isNaN(film.rating) ? film.rating : 0,
       duration: film.duration ? `${film.duration} min` : '',
       director: film.director || '',
       release_date: film.releaseDate ? new Date(film.releaseDate).toISOString().split('T')[0] : '',
@@ -221,17 +241,35 @@ export default function FilmManager() {
   const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus film ini?')) {
       try {
+        console.log(`FilmManager: Attempting to delete film ${id}`)
         const response = await FilmAPI.delete(id);
+        console.log('FilmManager: Delete response:', response)
+        
         if (response.meta.status === 'success') {
+          console.log('FilmManager: Delete successful, refreshing films list')
           alert(response.meta.message);
-          fetchFilms(pagination.current_page);
+          // Force refresh the films list
+          await fetchFilms(pagination.current_page);
+          console.log('FilmManager: Films list refreshed')
         } else {
+          console.error('FilmManager: Delete failed:', response.meta.message)
           alert(response.meta.message);
         }
       } catch (error) {
+        console.error('FilmManager: Delete error:', error)
         alert('Failed to delete film');
       }
     }
+  };
+
+  // Handle genre selection
+  const handleGenreToggle = (genreId) => {
+    setFormData(prev => ({
+      ...prev,
+      genres: prev.genres.includes(genreId)
+        ? prev.genres.filter(id => id !== genreId)
+        : [...prev.genres, genreId]
+    }));
   };
 
   if (isLoading) {
@@ -333,9 +371,9 @@ export default function FilmManager() {
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 backdrop-blur-sm appearance-none cursor-pointer"
               >
                 <option value="all">🎬 Semua Genre</option>
-                {meta.genres && meta.genres.map((genre) => (
-                  <option key={genre} value={genre}>
-                    {getGenreIcon(genre)} {genre}
+                {availableGenres && availableGenres.map((genre) => (
+                  <option key={genre.id} value={genre.judulGenre}>
+                    🎬 {genre.judulGenre}
                   </option>
                 ))}
               </select>
@@ -380,7 +418,6 @@ export default function FilmManager() {
               >
                 <option value="title">📝 Judul</option>
                 <option value="date">📅 Tanggal Rilis</option>
-                <option value="rating">⭐ Rating</option>
                 <option value="status">📊 Status</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -508,12 +545,23 @@ export default function FilmManager() {
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <div className={`w-8 h-8 bg-${getGenreColor(film.filmGenre)}-500/20 rounded-lg flex items-center justify-center`}>
-                      <span className="text-lg">{getGenreIcon(film.filmGenre)}</span>
+                    <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">🎬</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-300 capitalize">
-                      {film.filmGenre}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {film.filmGenres && film.filmGenres.length > 0 ? (
+                        film.filmGenres.slice(0, 2).map((fg, index) => (
+                          <span key={index} className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">
+                            {fg.genre.judulGenre}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400">No genres</span>
+                      )}
+                      {film.filmGenres && film.filmGenres.length > 2 && (
+                        <span className="text-xs text-gray-400">+{film.filmGenres.length - 2} more</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -572,12 +620,22 @@ export default function FilmManager() {
 
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
                       </svg>
-                      <span className="text-yellow-400 font-medium">{film.rating}</span>
+                      <span className="text-gray-400">{film.duration} min</span>
                     </div>
-                    <span className="text-gray-400">{film.duration}</span>
+                    <div className="flex items-center space-x-1">
+                      {film.filmGenres && film.filmGenres.length > 0 ? (
+                        film.filmGenres.slice(0, 2).map((fg, index) => (
+                          <span key={index} className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">
+                            {fg.genre.judulGenre}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500">No genres</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="text-sm text-gray-400">
@@ -640,12 +698,6 @@ export default function FilmManager() {
                       <p className="text-sm text-gray-400 line-clamp-1">{film.description}</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                        </svg>
-                        <span className="text-yellow-400 font-medium">{film.rating}</span>
-                      </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         film.status === 'now_showing' 
                           ? 'bg-green-500/20 text-green-400' 
@@ -663,6 +715,20 @@ export default function FilmManager() {
                       <span>{film.director}</span>
                       <span>{film.duration}</span>
                       <span>{new Date(film.releaseDate).getFullYear()}</span>
+                      <div className="flex items-center space-x-1">
+                        {film.filmGenres && film.filmGenres.length > 0 ? (
+                          film.filmGenres.slice(0, 3).map((fg, index) => (
+                            <span key={index} className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">
+                              {fg.genre.judulGenre}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-500">No genres</span>
+                        )}
+                        {film.filmGenres && film.filmGenres.length > 3 && (
+                          <span className="text-xs text-gray-400">+{film.filmGenres.length - 3}</span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
@@ -724,37 +790,40 @@ export default function FilmManager() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Genre
+                    Genre <span className="text-red-400">*</span>
                   </label>
-                  <select
-                    value={formData.film_genre}
-                    onChange={(e) => setFormData({...formData, film_genre: e.target.value})}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  >
-                    {meta.genres && meta.genres.map((genre) => (
-                      <option key={genre} value={genre}>{genre}</option>
-                    ))}
-                  </select>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                      {availableGenres.map((genre) => (
+                        <label key={genre.id} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.genres.includes(genre.id)}
+                            onChange={() => handleGenreToggle(genre.id)}
+                            className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500 focus:ring-2"
+                          />
+                          <span className="text-sm text-gray-300">{genre.judulGenre}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {formData.genres.length === 0 && (
+                      <p className="text-red-400 text-xs">Pilih minimal satu genre</p>
+                    )}
+                    {formData.genres.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {formData.genres.map(genreId => {
+                          const genre = availableGenres.find(g => g.id === genreId);
+                          return genre ? (
+                            <span key={genreId} className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                              {genre.judulGenre}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Rating
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="10"
-                    step="0.1"
-                    value={isNaN(formData.rating) ? '' : formData.rating}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                      setFormData({...formData, rating: isNaN(value) ? 0 : value});
-                    }}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                    placeholder="0.0 - 10.0"
-                  />
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -878,9 +947,8 @@ export default function FilmManager() {
                     setFormData({
                       film_title: '',
                       description: '',
-                      film_genre: 'action',
+                      genres: [],
                       status: 'coming_soon',
-                      rating: 0,
                       duration: '',
                       director: '',
                       release_date: '',

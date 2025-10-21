@@ -15,7 +15,7 @@ export default function EditArticlePage() {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    excerpt: '',
+    author: '',
     content: '',
     bannerImage: '',
     categoryId: '',
@@ -60,7 +60,7 @@ export default function EditArticlePage() {
         const article = data.data.article;
         setFormData({
           title: article.title || '',
-          excerpt: article.excerpt || '',
+          author: article.author || '',
           content: article.content || '',
           bannerImage: article.bannerImage || '',
           categoryId: article.categoryId || '',
@@ -169,6 +169,11 @@ export default function EditArticlePage() {
       return;
     }
 
+    if (!formData.author.trim()) {
+      alert('Author is required');
+      return;
+    }
+
     if (!formData.categoryId) {
       alert('Please select a category before saving');
       return;
@@ -214,6 +219,11 @@ export default function EditArticlePage() {
   const handlePublish = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       alert('Title and content are required');
+      return;
+    }
+
+    if (!formData.author.trim()) {
+      alert('Author is required');
       return;
     }
 
@@ -381,6 +391,19 @@ export default function EditArticlePage() {
               placeholder="Title"
               className="w-full text-4xl font-bold text-white placeholder-gray-400 border-none outline-none resize-none bg-transparent"
               style={{ minHeight: '60px' }}
+            />
+          </div>
+
+          {/* Author Input */}
+          <div>
+            <input
+              type="text"
+              name="author"
+              value={formData.author}
+              onChange={handleInputChange}
+              placeholder="Author Name"
+              className="w-full text-lg text-gray-300 placeholder-gray-500 border-none outline-none resize-none bg-transparent"
+              style={{ minHeight: '40px' }}
             />
           </div>
 

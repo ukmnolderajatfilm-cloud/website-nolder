@@ -5,7 +5,6 @@ const sampleBlogPosts = [
     id: 1,
     title: 'The Art of Cinematic Storytelling',
     slug: 'art-of-cinematic-storytelling',
-    excerpt: 'Explore the fundamental techniques that make a film truly memorable and impactful. From character development to visual composition, learn how great directors craft compelling narratives.',
     content: `
       <p>In the world of cinema, storytelling is the foundation upon which all great films are built. It's not just about having a good plot or interesting characters—it's about creating an emotional connection with your audience that lasts long after the credits roll.</p>
       
@@ -44,7 +43,6 @@ const sampleBlogPosts = [
     id: 2,
     title: 'Behind the Scenes: Our Latest Production',
     slug: 'behind-the-scenes-latest-production',
-    excerpt: 'Take a look at the creative process behind our most recent film project. Discover the challenges, triumphs, and lessons learned during production.',
     content: `
       <p>Every film production is a journey filled with unexpected challenges, creative breakthroughs, and moments of pure magic. Our latest project was no exception, and we're excited to share some insights from behind the scenes.</p>
       
@@ -85,7 +83,6 @@ const sampleBlogPosts = [
     id: 3,
     title: 'Film Festival Success Stories',
     slug: 'film-festival-success-stories',
-    excerpt: 'Celebrating our achievements and recognition in various film festivals. Learn about the journey from submission to acceptance and the impact on our creative community.',
     content: `
       <p>Film festivals are more than just competitions—they're celebrations of creativity, storytelling, and the power of cinema to connect people across cultures and experiences. We're honored to share our journey and the impact these festivals have had on our work.</p>
       
@@ -182,11 +179,10 @@ export async function GET(request, { params }) {
       id: post.id,
       title: post.title,
       slug: post.slug,
-      excerpt: post.excerpt,
       content: post.content,
       featuredImage: post.bannerImage,
       category: post.category?.categoryName || 'Uncategorized',
-      author: post.admin?.name || 'Unknown',
+      author: post.author || 'Nol Derajat Film',
       publishedAt: post.publishedAt,
       readTime: post.readTime,
       viewCount: post.viewCount,

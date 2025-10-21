@@ -8,7 +8,6 @@ const sampleBlogPosts = [
     id: 1,
     title: 'The Art of Cinematic Storytelling',
     slug: 'art-of-cinematic-storytelling',
-    excerpt: 'Explore the fundamental techniques that make a film truly memorable and impactful. From character development to visual composition, learn how great directors craft compelling narratives.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1758954623342-jqnx11xrb3o.png',
     author: 'Nol Derajat Film',
@@ -23,7 +22,6 @@ const sampleBlogPosts = [
     id: 2,
     title: 'Behind the Scenes: Our Latest Production',
     slug: 'behind-the-scenes-latest-production',
-    excerpt: 'Take a look at the creative process behind our most recent film project. Discover the challenges, triumphs, and lessons learned during production.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1758954779106-aw1kghckqi.jpg',
     author: 'Nol Derajat Film',
@@ -38,7 +36,6 @@ const sampleBlogPosts = [
     id: 3,
     title: 'Film Festival Success Stories',
     slug: 'film-festival-success-stories',
-    excerpt: 'Celebrating our achievements and recognition in various film festivals. Learn about the journey from submission to acceptance and the impact on our creative community.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1758955486705-ywjuzdh6g7.jpg',
     author: 'Nol Derajat Film',
@@ -53,7 +50,6 @@ const sampleBlogPosts = [
     id: 4,
     title: 'Cinematic Lighting Techniques',
     slug: 'cinematic-lighting-techniques',
-    excerpt: 'Master the art of lighting in film production. From natural light to artificial setups, discover how lighting shapes mood and narrative.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1759118814366-js75a7ko6t.png',
     author: 'Nol Derajat Film',
@@ -68,7 +64,6 @@ const sampleBlogPosts = [
     id: 5,
     title: 'Collaboration in Film Production',
     slug: 'collaboration-in-film-production',
-    excerpt: 'The importance of teamwork and collaboration in creating successful films. Learn how different roles work together to bring a vision to life.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1759118946775-vyowpv1hpbe.png',
     author: 'Nol Derajat Film',
@@ -83,7 +78,6 @@ const sampleBlogPosts = [
     id: 6,
     title: 'The Future of Independent Filmmaking',
     slug: 'future-of-independent-filmmaking',
-    excerpt: 'Exploring emerging trends and technologies that are shaping the future of independent filmmaking and creative expression.',
     content: 'Full article content would go here...',
     featuredImage: '/uploads/1759197674705-rq3fy0fsic.png',
     author: 'Nol Derajat Film',
@@ -156,6 +150,11 @@ export async function GET(request) {
               username: true,
               name: true
             }
+          },
+          images: {
+            orderBy: {
+              order: 'asc'
+            }
           }
         },
         orderBy: {
@@ -170,16 +169,16 @@ export async function GET(request) {
         id: article.id,
         title: article.title,
         slug: article.slug,
-        excerpt: article.excerpt || '',
         content: article.content,
         featuredImage: article.bannerImage || '',
-        author: article.admin.name || article.admin.username || 'Nol Derajat Film',
+        author: article.author || 'Nol Derajat Film',
         category: article.category.categoryName,
         readTime: article.readTime ? `${article.readTime} min read` : '5 min read',
         status: article.status,
         publishedAt: article.publishedAt?.toISOString() || article.createdAt.toISOString(),
         createdAt: article.createdAt.toISOString(),
-        updatedAt: article.updatedAt.toISOString()
+        updatedAt: article.updatedAt.toISOString(),
+        images: article.images || []
       }));
 
       totalPages = Math.ceil(totalPosts / limit);

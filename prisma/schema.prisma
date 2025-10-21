@@ -128,8 +128,6 @@ model Setting {
 model Film {
   id          Int       @id @default(autoincrement())
   filmTitle   String    @map("film_title")
-  filmGenre   String    @map("film_genre")
-  rating      Decimal   @db.Decimal(2, 1)
   duration    Int       // in minutes
   director    String
   releaseDate DateTime  @map("release_date") @db.Date
@@ -144,7 +142,36 @@ model Film {
   adminId     Int       @map("admin_id")
   admin       Admin     @relation(fields: [adminId], references: [id])
 
+  // Relations
+  filmGenres  FilmGenre[]
+
   @@map("films")
+}
+
+model Genre {
+  id          Int         @id @default(autoincrement())
+  judulGenre  String      @map("judul_genre") @unique
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  filmGenres  FilmGenre[]
+
+  @@map("genres")
+}
+
+model FilmGenre {
+  id        Int     @id @default(autoincrement())
+  filmId    Int     @map("film_id")
+  genreId   Int     @map("genre_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  film      Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  genre     Genre   @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@unique([filmId, genreId])
+  @@map("film_genres")
 }
 
 enum FilmStatus {
@@ -172,7 +199,7 @@ model Article {
   id            Int            @id @default(autoincrement())
   title         String
   slug          String         @unique
-  excerpt       String?        @db.Text
+  author        String
   content       String         @db.Text
   bannerImage   String?        @map("banner_image")
   status        ArticleStatus  @default(draft)

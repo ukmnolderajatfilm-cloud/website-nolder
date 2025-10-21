@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db.js';
 
+// Helper function to extract images from Markdown content
+function extractImagesFromContent(content) {
+  if (!content) return [];
+  
+  const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const images = [];
+  let match;
+  
+  while ((match = imageRegex.exec(content)) !== null) {
+    images.push({
+      imageUrl: match[2],
+      imagePath: match[2], // Same as imageUrl for now
+      altText: match[1] || 'Image',
+      caption: null,
+      order: images.length + 1
+    });
+  }
+  
+  return images;
+}
+
 /**
  * GET /api/admin/articles
  * Get all articles with filtering and pagination
@@ -36,7 +57,7 @@ export async function GET(request) {
       ...(search && {
         OR: [
           { title: { contains: search } },
-          { excerpt: { contains: search } },
+          { author: { contains: search } },
           { content: { contains: search } }
         ]
       }),
@@ -129,7 +150,7 @@ export async function POST(request) {
     const body = await request.json();
     const { 
       title, 
-      excerpt, 
+      author,
       content, 
       bannerImage, 
       categoryId, 
@@ -148,6 +169,13 @@ export async function POST(request) {
     if (!title || !title.trim()) {
       return NextResponse.json(
         { success: false, message: 'Title is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!author || !author.trim()) {
+      return NextResponse.json(
+        { success: false, message: 'Author is required' },
         { status: 400 }
       );
     }
@@ -201,18 +229,31 @@ export async function POST(request) {
     const wordCount = content.trim().split(/\s+/).length;
     const readTime = Math.ceil(wordCount / 200);
 
+    // Extract images from content
+    const images = extractImagesFromContent(content);
+
     const article = await prisma.article.create({
       data: {
         title: title.trim(),
         slug,
-        excerpt: excerpt?.trim() || null,
+        author: author.trim(),
         content: content.trim(),
         bannerImage: bannerImage?.trim() || null,
         status,
         categoryId: parseInt(categoryId),
         adminId: parseInt(adminId),
         readTime,
-        publishedAt: status === 'published' ? new Date() : null
+        publishedAt: status === 'published' ? new Date() : null,
+        // Create related images
+        images: {
+          create: images.map(img => ({
+            imageUrl: img.imageUrl,
+            imagePath: img.imagePath,
+            altText: img.altText,
+            caption: img.caption,
+            order: img.order
+          }))
+        }
       },
       include: {
         category: {
@@ -227,6 +268,11 @@ export async function POST(request) {
             id: true,
             username: true,
             name: true
+          }
+        },
+        images: {
+          orderBy: {
+            order: 'asc'
           }
         }
       }

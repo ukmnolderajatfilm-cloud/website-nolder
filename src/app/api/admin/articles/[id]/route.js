@@ -2,6 +2,27 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db.js';
 import { validateAdminAuth, validateArticleOwnership } from '../../../../../lib/auth.js';
 
+// Helper function to extract images from Markdown content
+function extractImagesFromContent(content) {
+  if (!content) return [];
+  
+  const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const images = [];
+  let match;
+  
+  while ((match = imageRegex.exec(content)) !== null) {
+    images.push({
+      imageUrl: match[2],
+      imagePath: match[2], // Same as imageUrl for now
+      altText: match[1] || 'Image',
+      caption: null,
+      order: images.length + 1
+    });
+  }
+  
+  return images;
+}
+
 /**
  * GET /api/admin/articles/[id]
  * Get single article
@@ -125,7 +146,7 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const { 
       title, 
-      excerpt, 
+      author,
       content, 
       bannerImage, 
       categoryId, 
@@ -148,6 +169,13 @@ export async function PUT(request, { params }) {
     if (!title || !title.trim()) {
       return NextResponse.json(
         { success: false, message: 'Title is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!author || !author.trim()) {
+      return NextResponse.json(
+        { success: false, message: 'Author is required' },
         { status: 400 }
       );
     }
@@ -216,35 +244,62 @@ export async function PUT(request, { params }) {
       publishedAt = null;
     }
 
-    const article = await prisma.article.update({
-      where: { id: parseInt(id) },
-      data: {
-        title: title.trim(),
-        slug,
-        excerpt: excerpt?.trim() || null,
-        content: content.trim(),
-        bannerImage: bannerImage?.trim() || null,
-        status: status || existingArticle.status,
-        categoryId: parseInt(categoryId),
-        readTime,
-        publishedAt
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            categoryName: true,
-            slug: true
+    // Extract images from content
+    const images = extractImagesFromContent(content);
+
+    // Use transaction to update article and images
+    const article = await prisma.$transaction(async (tx) => {
+      // Delete existing images
+      await tx.articleImage.deleteMany({
+        where: { articleId: parseInt(id) }
+      });
+
+      // Update article and create new images
+      return await tx.article.update({
+        where: { id: parseInt(id) },
+        data: {
+          title: title.trim(),
+          slug,
+          author: author.trim(),
+          content: content.trim(),
+          bannerImage: bannerImage?.trim() || null,
+          status: status || existingArticle.status,
+          categoryId: parseInt(categoryId),
+          readTime,
+          publishedAt,
+          // Create new images
+          images: {
+            create: images.map(img => ({
+              imageUrl: img.imageUrl,
+              imagePath: img.imagePath,
+              altText: img.altText,
+              caption: img.caption,
+              order: img.order
+            }))
           }
         },
-        admin: {
-          select: {
-            id: true,
-            username: true,
-            name: true
+        include: {
+          category: {
+            select: {
+              id: true,
+              categoryName: true,
+              slug: true
+            }
+          },
+          admin: {
+            select: {
+              id: true,
+              username: true,
+              name: true
+            }
+          },
+          images: {
+            orderBy: {
+              order: 'asc'
+            }
           }
         }
-      }
+      });
     });
 
     const responseTime = Date.now() - startTime;

@@ -36,8 +36,6 @@ export async function GET(request) {
     const search = searchParams.get('search') || ''
     const genre = searchParams.get('genre') || ''
     const status = searchParams.get('status') || ''
-    const ratingMin = searchParams.get('rating_min') || ''
-    const ratingMax = searchParams.get('rating_max') || ''
     const year = searchParams.get('year') || ''
     const sortBy = searchParams.get('sort_by') || 'createdAt'
     const sortOrder = searchParams.get('sort_order') || 'desc'
@@ -49,8 +47,6 @@ export async function GET(request) {
       search,
       genre,
       status,
-      ratingMin,
-      ratingMax,
       year,
       sortBy,
       sortOrder,

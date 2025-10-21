@@ -1,5 +1,26 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+/* Custom prose styling for blog content */
+.prose {
+  --tw-prose-body: #e5e7eb;
+  --tw-prose-headings: #fbbf24;
+  --tw-prose-lead: #9ca3af;
+  --tw-prose-links: #fbbf24;
+  --tw-prose-bold: #ffffff;
+  --tw-prose-counters: #6b7280;
+  --tw-prose-bullets: #4b5563;
+  --tw-prose-hr: #374151;
+  --tw-prose-quotes: #d1d5db;
+  --tw-prose-quote-borders: #fbbf24;
+  --tw-prose-captions: #9ca3af;
+  --tw-prose-code: #fbbf24;
+  --tw-prose-pre-code: #e5e7eb;
+  --tw-prose-pre-bg: #1f2937;
+  --tw-prose-th-borders: #374151;
+  --tw-prose-td-borders: #374151;
+}
 
 /* Import component styles */
 @import "./styles/components/index.css";

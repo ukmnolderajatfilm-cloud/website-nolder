@@ -12,19 +12,13 @@ export class FilmService {
       errors.film_title = 'Film title must be less than 255 characters'
     }
     
-    // Genre validation
-    if (!data.film_genre || data.film_genre.trim().length === 0) {
-      errors.film_genre = 'Film genre is required'
-    } else if (data.film_genre.length > 100) {
-      errors.film_genre = 'Film genre must be less than 100 characters'
+    // Genres validation (array of genre IDs)
+    if (!data.genres || !Array.isArray(data.genres) || data.genres.length === 0) {
+      errors.genres = 'At least one genre is required'
+    } else if (data.genres.length > 10) {
+      errors.genres = 'Maximum 10 genres allowed'
     }
     
-    // Rating validation
-    if (data.rating === undefined || data.rating === null) {
-      errors.rating = 'Rating is required'
-    } else if (isNaN(data.rating) || data.rating < 0 || data.rating > 10) {
-      errors.rating = 'Rating must be a number between 0 and 10'
-    }
     
     // Duration validation
     if (!data.duration || (typeof data.duration === 'string' && data.duration.trim().length === 0)) {
@@ -121,13 +115,27 @@ export class FilmService {
       where.OR = [
         { filmTitle: { contains: search } },
         { director: { contains: search } },
-        { filmGenre: { contains: search } }
+        { 
+          filmGenres: {
+            some: {
+              genre: {
+                judulGenre: { contains: search }
+              }
+            }
+          }
+        }
       ]
     }
 
     // Genre filter
     if (genre) {
-      where.filmGenre = { contains: genre }
+      where.filmGenres = {
+        some: {
+          genre: {
+            judulGenre: { contains: genre }
+          }
+        }
+      }
     }
 
     // Status filter
@@ -135,16 +143,6 @@ export class FilmService {
       where.status = status
     }
 
-    // Rating range filter
-    if (ratingMin !== '' || ratingMax !== '') {
-      where.rating = {}
-      if (ratingMin !== '') {
-        where.rating.gte = parseFloat(ratingMin)
-      }
-      if (ratingMax !== '') {
-        where.rating.lte = parseFloat(ratingMax)
-      }
-    }
 
     // Year filter
     if (year) {
@@ -161,9 +159,7 @@ export class FilmService {
     if (sortBy === 'title') {
       orderBy.filmTitle = sortOrder
     } else if (sortBy === 'genre') {
-      orderBy.filmGenre = sortOrder
-    } else if (sortBy === 'rating') {
-      orderBy.rating = sortOrder
+      orderBy.filmTitle = sortOrder // Fallback to title since we can't sort by multiple genres easily
     } else if (sortBy === 'date') {
       orderBy.releaseDate = sortOrder
     } else if (sortBy === 'status') {
@@ -189,6 +185,16 @@ export class FilmService {
                 id: true,
                 username: true,
                 name: true
+              }
+            },
+            filmGenres: {
+              include: {
+                genre: {
+                  select: {
+                    id: true,
+                    judulGenre: true
+                  }
+                }
               }
             }
           }
@@ -231,6 +237,16 @@ export class FilmService {
               username: true,
               name: true
             }
+          },
+          filmGenres: {
+            include: {
+              genre: {
+                select: {
+                  id: true,
+                  judulGenre: true
+                }
+              }
+            }
           }
         }
       })
@@ -265,6 +281,16 @@ export class FilmService {
       throw new Error('A film with this title already exists')
     }
 
+    // Validate genre IDs exist
+    const genreIds = data.genres.map(id => parseInt(id))
+    const existingGenres = await prisma.genre.findMany({
+      where: { id: { in: genreIds } }
+    })
+
+    if (existingGenres.length !== genreIds.length) {
+      throw new Error('One or more genre IDs are invalid')
+    }
+
     try {
       // Extract duration number from string (e.g., "120 min" -> 120) or use number directly
       let durationValue
@@ -278,8 +304,6 @@ export class FilmService {
       const film = await prisma.film.create({
         data: {
           filmTitle: data.film_title.trim(),
-          filmGenre: data.film_genre.trim(),
-          rating: parseFloat(data.rating),
           duration: durationValue,
           director: data.director.trim(),
           releaseDate: new Date(data.release_date),
@@ -288,7 +312,12 @@ export class FilmService {
           posterUrl: data.poster_url?.trim() || null,
           posterPath: data.poster_path?.trim() || null,
           trailerUrl: data.trailer_url?.trim() || null,
-          adminId: parseInt(adminId)
+          adminId: parseInt(adminId),
+          filmGenres: {
+            create: genreIds.map(genreId => ({
+              genreId: genreId
+            }))
+          }
         },
         include: {
           admin: {
@@ -296,6 +325,16 @@ export class FilmService {
               id: true,
               username: true,
               name: true
+            }
+          },
+          filmGenres: {
+            include: {
+              genre: {
+                select: {
+                  id: true,
+                  judulGenre: true
+                }
+              }
             }
           }
         }
@@ -334,6 +373,16 @@ export class FilmService {
       throw new Error('A film with this title already exists')
     }
 
+    // Validate genre IDs exist
+    const genreIds = data.genres.map(id => parseInt(id))
+    const existingGenres = await prisma.genre.findMany({
+      where: { id: { in: genreIds } }
+    })
+
+    if (existingGenres.length !== genreIds.length) {
+      throw new Error('One or more genre IDs are invalid')
+    }
+
     try {
       // Extract duration number from string (e.g., "120 min" -> 120) or use number directly
       let durationValue
@@ -344,30 +393,60 @@ export class FilmService {
         durationValue = durationMatch ? parseInt(durationMatch[0]) : 0
       }
 
-      const film = await prisma.film.update({
-        where: { id: parseInt(id) },
-        data: {
-          filmTitle: data.film_title.trim(),
-          filmGenre: data.film_genre.trim(),
-          rating: parseFloat(data.rating),
-          duration: durationValue,
-          director: data.director.trim(),
-          releaseDate: new Date(data.release_date),
-          status: data.status,
-          description: data.description?.trim() || null,
-          posterUrl: data.poster_url?.trim() || null,
-          posterPath: data.poster_path?.trim() || null,
-          trailerUrl: data.trailer_url?.trim() || null
-        },
-        include: {
-          admin: {
-            select: {
-              id: true,
-              username: true,
-              name: true
+      // Use transaction to update film and genres
+      const film = await prisma.$transaction(async (tx) => {
+        // Update film data
+        const updatedFilm = await tx.film.update({
+          where: { id: parseInt(id) },
+          data: {
+            filmTitle: data.film_title.trim(),
+            duration: durationValue,
+            director: data.director.trim(),
+            releaseDate: new Date(data.release_date),
+            status: data.status,
+            description: data.description?.trim() || null,
+            posterUrl: data.poster_url?.trim() || null,
+            posterPath: data.poster_path?.trim() || null,
+            trailerUrl: data.trailer_url?.trim() || null
+          }
+        })
+
+        // Delete existing film-genre relationships
+        await tx.filmGenre.deleteMany({
+          where: { filmId: parseInt(id) }
+        })
+
+        // Create new film-genre relationships
+        await tx.filmGenre.createMany({
+          data: genreIds.map(genreId => ({
+            filmId: parseInt(id),
+            genreId: genreId
+          }))
+        })
+
+        // Return film with updated relationships
+        return await tx.film.findUnique({
+          where: { id: parseInt(id) },
+          include: {
+            admin: {
+              select: {
+                id: true,
+                username: true,
+                name: true
+              }
+            },
+            filmGenres: {
+              include: {
+                genre: {
+                  select: {
+                    id: true,
+                    judulGenre: true
+                  }
+                }
+              }
             }
           }
-        }
+        })
       })
 
       return film
@@ -382,6 +461,23 @@ export class FilmService {
   // Soft delete film
   static async deleteFilm(id, adminId) {
     try {
+      console.log(`FilmService: Attempting to soft delete film ${id} by admin ${adminId}`)
+      
+      // First check if film exists and is not already deleted
+      const existingFilm = await prisma.film.findFirst({
+        where: { 
+          id: parseInt(id),
+          deletedAt: null
+        }
+      })
+
+      if (!existingFilm) {
+        console.log(`FilmService: Film ${id} not found or already deleted`)
+        throw new Error('Film not found')
+      }
+
+      console.log(`FilmService: Found film ${id} - ${existingFilm.filmTitle}, proceeding with soft delete`)
+
       const film = await prisma.film.update({
         where: { id: parseInt(id) },
         data: { deletedAt: new Date() },
@@ -396,8 +492,10 @@ export class FilmService {
         }
       })
 
+      console.log(`FilmService: Successfully soft deleted film ${id} - ${film.filmTitle}`)
       return film
     } catch (error) {
+      console.error(`FilmService: Failed to delete film ${id}:`, error)
       throw new Error(`Failed to delete film: ${error.message}`)
     }
   }
@@ -473,17 +571,12 @@ export class FilmService {
         comingSoonFilms,
         nowShowingFilms,
         archivedFilms,
-        avgRating
       ] = await Promise.all([
         prisma.film.count({ where: { deletedAt: null } }),
         prisma.film.count({ where: { deletedAt: null, status: 'now_showing' } }),
         prisma.film.count({ where: { deletedAt: null, status: 'coming_soon' } }),
         prisma.film.count({ where: { deletedAt: null, status: 'now_showing' } }),
-        prisma.film.count({ where: { deletedAt: null, status: 'archived' } }),
-        prisma.film.aggregate({
-          where: { deletedAt: null },
-          _avg: { rating: true }
-        })
+        prisma.film.count({ where: { deletedAt: null, status: 'archived' } })
       ])
 
       return {
@@ -492,33 +585,107 @@ export class FilmService {
           coming_soon: comingSoonFilms,
           now_showing: nowShowingFilms,
           archived: archivedFilms
-        },
-        averageRating: avgRating._avg.rating || 0
+        }
       }
     } catch (error) {
       throw new Error(`Failed to get film statistics: ${error.message}`)
     }
   }
 
-  // Get unique genres
-  static async getUniqueGenres() {
+  // Get all genres
+  static async getAllGenres() {
     try {
-      const films = await prisma.film.findMany({
-        where: { deletedAt: null },
-        select: { filmGenre: true }
+      const genres = await prisma.genre.findMany({
+        orderBy: { judulGenre: 'asc' }
       })
-
-      const genres = new Set()
-      films.forEach(film => {
-        const filmGenres = film.filmGenre.split(',').map(g => g.trim())
-        filmGenres.forEach(genre => {
-          if (genre) genres.add(genre)
-        })
-      })
-
-      return Array.from(genres).sort()
+      return genres
     } catch (error) {
       throw new Error(`Failed to get genres: ${error.message}`)
+    }
+  }
+
+  // Create new genre
+  static async createGenre(judulGenre) {
+    try {
+      // Check if genre already exists
+      const existingGenre = await prisma.genre.findFirst({
+        where: { judulGenre: judulGenre.trim() }
+      })
+
+      if (existingGenre) {
+        throw new Error('Genre already exists')
+      }
+
+      const genre = await prisma.genre.create({
+        data: { judulGenre: judulGenre.trim() }
+      })
+
+      return genre
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new Error('Genre already exists')
+      }
+      throw new Error(`Failed to create genre: ${error.message}`)
+    }
+  }
+
+  // Update genre
+  static async updateGenre(id, judulGenre) {
+    try {
+      // Check if genre exists
+      const existingGenre = await prisma.genre.findUnique({
+        where: { id: parseInt(id) }
+      })
+
+      if (!existingGenre) {
+        throw new Error('Genre not found')
+      }
+
+      // Check if new name already exists
+      const duplicateGenre = await prisma.genre.findFirst({
+        where: { 
+          judulGenre: judulGenre.trim(),
+          id: { not: parseInt(id) }
+        }
+      })
+
+      if (duplicateGenre) {
+        throw new Error('Genre name already exists')
+      }
+
+      const genre = await prisma.genre.update({
+        where: { id: parseInt(id) },
+        data: { judulGenre: judulGenre.trim() }
+      })
+
+      return genre
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new Error('Genre name already exists')
+      }
+      throw new Error(`Failed to update genre: ${error.message}`)
+    }
+  }
+
+  // Delete genre
+  static async deleteGenre(id) {
+    try {
+      // Check if genre is being used by any films
+      const filmCount = await prisma.filmGenre.count({
+        where: { genreId: parseInt(id) }
+      })
+
+      if (filmCount > 0) {
+        throw new Error('Cannot delete genre that is being used by films')
+      }
+
+      await prisma.genre.delete({
+        where: { id: parseInt(id) }
+      })
+
+      return { success: true }
+    } catch (error) {
+      throw new Error(`Failed to delete genre: ${error.message}`)
     }
   }
 

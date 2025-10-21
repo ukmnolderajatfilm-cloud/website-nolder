@@ -19,6 +19,7 @@ export function useLatestBlogPosts(limit = 3) {
         const transformedPosts = response.data.posts.map(post => ({
           id: post.id,
           title: post.title,
+          content: post.content, // Include content for proper excerpt generation
           excerpt: post.excerpt || post.content?.substring(0, 150) + '...',
           featuredImage: post.featuredImage || post.image || '/images/default-blog.jpg',
           slug: post.slug,

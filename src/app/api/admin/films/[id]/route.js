@@ -150,6 +150,7 @@ export async function DELETE(request, { params }) {
     const token = request.cookies.get('admin-token')?.value
 
     if (!token) {
+      console.log('Film delete attempt: Unauthorized - no token')
       return NextResponse.json({ 
         meta: {
           status: 'error',
@@ -163,6 +164,7 @@ export async function DELETE(request, { params }) {
     try {
       decoded = verifyToken(token)
     } catch (error) {
+      console.log('Film delete attempt: Invalid token')
       return NextResponse.json({ 
         meta: {
           status: 'error',
@@ -173,7 +175,11 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = params
+    console.log(`Film delete attempt: Admin ${decoded.id} trying to delete film ${id}`)
+    
     const film = await FilmService.deleteFilm(id, decoded.id)
+    
+    console.log(`Film delete success: Film ${id} deleted by admin ${decoded.id}`)
 
     return NextResponse.json({
       meta: {
@@ -185,6 +191,7 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
+    console.error(`Film delete error: ${error.message}`, error)
     
     if (error.message === 'Film not found') {
       return NextResponse.json({ 

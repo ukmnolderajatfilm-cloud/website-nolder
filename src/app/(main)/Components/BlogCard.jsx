@@ -2,8 +2,67 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { marked } from 'marked';
 
 const BlogCard = ({ post }) => {
+  // Configure marked for better HTML output
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false
+  });
+
+  // Function to render content with proper formatting (same as in blog detail page)
+  const renderFormattedContent = (content) => {
+    if (!content) return '';
+    
+    // Pre-process content to fix common markdown issues
+    let processedContent = content
+      // Fix bold text with spaces: **text ** -> **text**
+      .replace(/\*\*([^*]+?)\s+\*\*/g, '**$1**')
+      // Fix italic text with spaces: *text * -> *text*
+      .replace(/\*([^*]+?)\s+\*/g, '*$1*')
+      // Fix heading text that might not be properly formatted
+      .replace(/^###\s+(.+)$/gm, '### $1')
+      .replace(/^##\s+(.+)$/gm, '## $1')
+      .replace(/^#\s+(.+)$/gm, '# $1');
+    
+    // Convert markdown to HTML
+    let html = marked(processedContent);
+    
+    // Post-process HTML for custom formatting
+    html = html
+      // Handle text alignment (keep existing prose styling)
+      .replace(/<div class="text-(left|center|right|justify)">(.*?)<\/div>/g, '<div class="text-$1">$2</div>')
+      // Handle underline text (keep existing prose styling)
+      .replace(/<u>(.*?)<\/u>/g, '<u class="underline">$1</u>')
+      // Ensure any remaining **text** gets converted to <strong>
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Ensure any remaining *text* gets converted to <em>
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Ensure headings are properly styled
+      .replace(/<h1>(.*?)<\/h1>/g, '<h1 class="text-4xl font-bold text-yellow-400 my-6">$1</h1>')
+      .replace(/<h2>(.*?)<\/h2>/g, '<h2 class="text-3xl font-bold text-yellow-400 my-5">$1</h2>')
+      .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="text-2xl font-semibold text-yellow-400 my-4">$1</h3>');
+    
+    return html;
+  };
+
+  // Function to create clean excerpt from content
+  const createCleanExcerpt = (content) => {
+    if (!content) return '';
+    
+    // First render the formatted content
+    const formattedHtml = renderFormattedContent(content);
+    
+    // Strip HTML tags and get plain text
+    const plainText = formattedHtml.replace(/<[^>]*>/g, '');
+    
+    // Return first 150 characters with ellipsis
+    return plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('id-ID', {
@@ -60,7 +119,7 @@ const BlogCard = ({ post }) => {
           
           {/* Excerpt */}
           <p className="text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
-            {post.excerpt}
+            {post.content ? createCleanExcerpt(post.content) : post.excerpt}
           </p>
           
           {/* Meta Information */}
