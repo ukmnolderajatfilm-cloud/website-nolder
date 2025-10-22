@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FilmAPI } from '../../../../lib/api/filmAPI';
 
@@ -21,7 +21,7 @@ export default function FilmManager() {
     status: 'coming_soon',
     duration: '',
     director: '',
-    release_date: '',
+    release_year: '',
     poster_url: '',
     poster_path: '',
     trailer_url: ''
@@ -39,6 +39,10 @@ export default function FilmManager() {
   
   const [meta, setMeta] = useState({ genres: [], directors: [], statuses: [] });
   const [availableGenres, setAvailableGenres] = useState([]);
+  const [newGenreName, setNewGenreName] = useState('');
+  const [showAddGenre, setShowAddGenre] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef(null);
 
 
   // Fetch films
@@ -75,7 +79,7 @@ export default function FilmManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, filterGenre, filterStatus, sortBy, pagination.per_page]);
+  }, [pagination.per_page]);
 
   // Load metadata
   const loadMeta = useCallback(async () => {
@@ -103,31 +107,164 @@ export default function FilmManager() {
     }
   }, []);
 
+  // Add new genre
+  const addNewGenre = async () => {
+    if (!newGenreName.trim()) {
+      alert('Nama genre tidak boleh kosong');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/genres', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ judulGenre: newGenreName.trim() })
+      });
+
+      const data = await response.json();
+      if (data.meta.status === 'success') {
+        // Add new genre to available genres
+        setAvailableGenres(prev => [...prev, data.data.genre]);
+        // Select the new genre
+        setFormData(prev => ({
+          ...prev,
+          genres: [...prev.genres, data.data.genre.id]
+        }));
+        setNewGenreName('');
+        setShowAddGenre(false);
+        alert('Genre berhasil ditambahkan!');
+      } else {
+        alert(data.meta.message);
+      }
+    } catch (error) {
+      console.error('Error adding genre:', error);
+      alert('Gagal menambahkan genre');
+    }
+  };
+
   useEffect(() => {
     loadMeta();
     loadGenres();
     fetchFilms(1);
   }, [loadMeta, loadGenres, fetchFilms]);
 
+  // Search function
+  const performSearch = useCallback(async () => {
+    try {
+      setIsSearching(true);
+      const params = {
+        page: 1,
+        per_page: pagination.per_page,
+        search: searchTerm,
+        genre: filterGenre === 'all' ? '' : filterGenre,
+        status: filterStatus === 'all' ? '' : filterStatus,
+        sort_by: sortBy,
+        sort_order: 'desc'
+      };
+
+      const response = await FilmAPI.getAll(params);
+      
+      if (response.meta.status === 'success') {
+        setFilms(response.data.films);
+        setPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchTerm, filterGenre, filterStatus, sortBy, pagination.per_page]);
+
+  // Handle search input change
+  const handleSearchChange = useCallback((e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch();
+    }, 300);
+  }, [performSearch]);
+
+  // Handle filter changes
   useEffect(() => {
-    fetchFilms(1);
-  }, [searchTerm, filterGenre, filterStatus, sortBy]);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch();
+    }, 100); // Shorter delay for filter changes
+  }, [filterGenre, filterStatus, sortBy, performSearch]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Films are already filtered and sorted by API
   const filteredAndSortedFilms = films;
 
   const getGenreIcon = (genre) => {
     const icons = {
-      action: '🎬',
-      'sci-fi': '🚀',
-      drama: '🎭',
-      comedy: '😂',
-      horror: '👻',
-      romance: '💕',
-      crime: '🔫',
-      thriller: '😱'
+      action: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+        </svg>
+      ),
+      'sci-fi': (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd"/>
+        </svg>
+      ),
+      drama: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
+        </svg>
+      ),
+      comedy: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd"/>
+        </svg>
+      ),
+      horror: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z" clipRule="evenodd"/>
+        </svg>
+      ),
+      romance: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
+        </svg>
+      ),
+      crime: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+        </svg>
+      ),
+      thriller: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+        </svg>
+      )
     };
-    return icons[genre] || '🎬';
+    return icons[genre] || (
+      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+      </svg>
+    );
   };
 
   const getGenreColor = (genre) => {
@@ -206,11 +343,13 @@ export default function FilmManager() {
           status: 'coming_soon',
           duration: '',
           director: '',
-          release_date: '',
+          release_year: '',
           poster_url: '',
           poster_path: '',
           trailer_url: ''
         });
+        setNewGenreName('');
+        setShowAddGenre(false);
         fetchFilms(pagination.current_page);
       } else {
         alert(response.meta.message);
@@ -229,7 +368,7 @@ export default function FilmManager() {
       status: film.status || '',
       duration: film.duration ? `${film.duration} min` : '',
       director: film.director || '',
-      release_date: film.releaseDate ? new Date(film.releaseDate).toISOString().split('T')[0] : '',
+      release_year: film.releaseYear || '',
       poster_url: film.posterUrl || '',
       poster_path: film.posterPath || '',
       trailer_url: film.trailerUrl || ''
@@ -262,15 +401,6 @@ export default function FilmManager() {
     }
   };
 
-  // Handle genre selection
-  const handleGenreToggle = (genreId) => {
-    setFormData(prev => ({
-      ...prev,
-      genres: prev.genres.includes(genreId)
-        ? prev.genres.filter(id => id !== genreId)
-        : [...prev.genres, genreId]
-    }));
-  };
 
   if (isLoading) {
     return (
@@ -336,16 +466,21 @@ export default function FilmManager() {
         {/* Search Bar */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            {isSearching ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-yellow-400 rounded-full animate-spin"></div>
+            ) : (
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            )}
           </div>
           <input
             type="text"
             placeholder="Cari film berdasarkan judul, sutradara, atau genre..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 backdrop-blur-sm"
+            autoComplete="off"
           />
           {searchTerm && (
             <button
@@ -370,10 +505,10 @@ export default function FilmManager() {
                 onChange={(e) => setFilterGenre(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 backdrop-blur-sm appearance-none cursor-pointer"
               >
-                <option value="all">🎬 Semua Genre</option>
+                <option value="all">Semua Genre</option>
                 {availableGenres && availableGenres.map((genre) => (
                   <option key={genre.id} value={genre.judulGenre}>
-                    🎬 {genre.judulGenre}
+                    {genre.judulGenre}
                   </option>
                 ))}
               </select>
@@ -394,10 +529,10 @@ export default function FilmManager() {
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 backdrop-blur-sm appearance-none cursor-pointer"
               >
-                <option value="all">📊 Semua Status</option>
-                <option value="coming_soon">🔜 Coming Soon</option>
-                <option value="now_showing">🎬 Now Showing</option>
-                <option value="archived">📁 Archived</option>
+                <option value="all">Semua Status</option>
+                <option value="coming_soon">Coming Soon</option>
+                <option value="now_showing">Now Showing</option>
+                <option value="archived">Archived</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -416,9 +551,9 @@ export default function FilmManager() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 backdrop-blur-sm appearance-none cursor-pointer"
               >
-                <option value="title">📝 Judul</option>
-                <option value="date">📅 Tanggal Rilis</option>
-                <option value="status">📊 Status</option>
+                <option value="title">Judul</option>
+                <option value="date">Tahun Rilis</option>
+                <option value="status">Status</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -546,7 +681,9 @@ export default function FilmManager() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                      <span className="text-lg">🎬</span>
+                      <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                      </svg>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {film.filmGenres && film.filmGenres.length > 0 ? (
@@ -640,7 +777,7 @@ export default function FilmManager() {
 
                   <div className="text-sm text-gray-400">
                     <p className="line-clamp-1">Director: {film.director}</p>
-                    <p className="line-clamp-1">Release: {new Date(film.releaseDate).getFullYear()}</p>
+                    <p className="line-clamp-1">Release: {film.releaseYear}</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -714,7 +851,7 @@ export default function FilmManager() {
                     <div className="flex items-center space-x-4 text-sm text-gray-400">
                       <span>{film.director}</span>
                       <span>{film.duration}</span>
-                      <span>{new Date(film.releaseDate).getFullYear()}</span>
+                      <span>{film.releaseYear}</span>
                       <div className="flex items-center space-x-1">
                         {film.filmGenres && film.filmGenres.length > 0 ? (
                           film.filmGenres.slice(0, 3).map((fg, index) => (
@@ -792,30 +929,89 @@ export default function FilmManager() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Genre <span className="text-red-400">*</span>
                   </label>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-                      {availableGenres.map((genre) => (
-                        <label key={genre.id} className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.genres.includes(genre.id)}
-                            onChange={() => handleGenreToggle(genre.id)}
-                            className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500 focus:ring-2"
-                          />
-                          <span className="text-sm text-gray-300">{genre.judulGenre}</span>
-                        </label>
-                      ))}
+                  <div className="space-y-3">
+                    {/* Genre Selection Dropdown */}
+                    <div className="flex gap-2">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const genreId = parseInt(e.target.value);
+                          if (genreId && !formData.genres.includes(genreId)) {
+                            setFormData(prev => ({
+                              ...prev,
+                              genres: [...prev.genres, genreId]
+                            }));
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      >
+                        <option value="">Pilih Genre...</option>
+                        {availableGenres.map((genre) => (
+                          <option key={genre.id} value={genre.id}>
+                            {genre.judulGenre}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddGenre(!showAddGenre)}
+                        className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors text-sm font-medium"
+                      >
+                        + Tambah Genre
+                      </button>
                     </div>
+
+                    {/* Add New Genre Form */}
+                    {showAddGenre && (
+                      <div className="flex gap-2 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+                        <input
+                          type="text"
+                          value={newGenreName}
+                          onChange={(e) => setNewGenreName(e.target.value)}
+                          placeholder="Nama genre baru..."
+                          className="flex-1 px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={addNewGenre}
+                          className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition-colors text-sm font-medium"
+                        >
+                          Simpan
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddGenre(false);
+                            setNewGenreName('');
+                          }}
+                          className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors text-sm font-medium"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Selected Genres Display */}
                     {formData.genres.length === 0 && (
                       <p className="text-red-400 text-xs">Pilih minimal satu genre</p>
                     )}
                     {formData.genres.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-2">
                         {formData.genres.map(genreId => {
                           const genre = availableGenres.find(g => g.id === genreId);
                           return genre ? (
-                            <span key={genreId} className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                            <span key={genreId} className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full border border-yellow-500/30">
                               {genre.judulGenre}
+                              <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  genres: prev.genres.filter(id => id !== genreId)
+                                }))}
+                                className="ml-1 text-yellow-300 hover:text-yellow-200 transition-colors"
+                              >
+                                ×
+                              </button>
                             </span>
                           ) : null;
                         })}
@@ -853,13 +1049,16 @@ export default function FilmManager() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Tanggal Rilis
+                    Tahun Rilis
                   </label>
                   <input
-                    type="date"
-                    value={formData.release_date}
-                    onChange={(e) => setFormData({...formData, release_date: e.target.value})}
+                    type="number"
+                    min="1900"
+                    max="2035"
+                    value={formData.release_year}
+                    onChange={(e) => setFormData({...formData, release_year: e.target.value})}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Contoh: 2024"
                   />
                 </div>
 
@@ -951,12 +1150,14 @@ export default function FilmManager() {
                       status: 'coming_soon',
                       duration: '',
                       director: '',
-                      release_date: '',
+                      release_year: '',
                       poster_url: '',
                       poster_path: '',
                       trailer_url: ''
                     });
                     setSelectedFile(null);
+                    setNewGenreName('');
+                    setShowAddGenre(false);
                   }}
                   className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >

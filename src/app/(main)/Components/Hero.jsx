@@ -12,58 +12,130 @@ const Masonry = dynamic(() => import('./Masonry/Masonry'), {
 const Hero = () => {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [masonryItems, setMasonryItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Masonry items untuk background overlay
-  const masonryItems = [
-    {
-      id: "1",
-      img: "https://picsum.photos/id/1015/600/900?grayscale",
-      url: "#",
-      height: 400,
-    },
-    {
-      id: "2", 
-      img: "https://picsum.photos/id/1011/600/750?grayscale",
-      url: "#",
-      height: 250,
-    },
-    {
-      id: "3",
-      img: "https://picsum.photos/id/1020/600/800?grayscale", 
-      url: "#",
-      height: 600,
-    },
-    {
-      id: "4",
-      img: "https://picsum.photos/id/1025/600/700?grayscale",
-      url: "#", 
-      height: 350,
-    },
-    {
-      id: "5",
-      img: "https://picsum.photos/id/1031/600/850?grayscale",
-      url: "#",
-      height: 500,
-    },
-    {
-      id: "6",
-      img: "https://picsum.photos/id/1035/600/650?grayscale",
-      url: "#",
-      height: 300,
-    },
-    {
-      id: "7",
-      img: "https://picsum.photos/id/1040/600/900?grayscale",
-      url: "#",
-      height: 450,
-    },
-    {
-      id: "8",
-      img: "https://picsum.photos/id/1043/600/750?grayscale",
-      url: "#",
-      height: 380,
-    }
-  ];
+  // Fetch hero images from API
+  useEffect(() => {
+    const fetchHeroImages = async () => {
+      try {
+        const response = await fetch('/api/hero-images');
+        if (response.ok) {
+          const result = await response.json();
+          setMasonryItems(result.data);
+        } else {
+          // Fallback to default images if API fails
+          setMasonryItems([
+            {
+              id: "1",
+              img: "https://picsum.photos/id/1015/600/900?grayscale",
+              url: "#",
+              height: 400,
+            },
+            {
+              id: "2", 
+              img: "https://picsum.photos/id/1011/600/750?grayscale",
+              url: "#",
+              height: 250,
+            },
+            {
+              id: "3",
+              img: "https://picsum.photos/id/1020/600/800?grayscale", 
+              url: "#",
+              height: 600,
+            },
+            {
+              id: "4",
+              img: "https://picsum.photos/id/1025/600/700?grayscale",
+              url: "#", 
+              height: 350,
+            },
+            {
+              id: "5",
+              img: "https://picsum.photos/id/1031/600/850?grayscale",
+              url: "#",
+              height: 500,
+            },
+            {
+              id: "6",
+              img: "https://picsum.photos/id/1035/600/650?grayscale",
+              url: "#",
+              height: 300,
+            },
+            {
+              id: "7",
+              img: "https://picsum.photos/id/1040/600/900?grayscale",
+              url: "#",
+              height: 450,
+            },
+            {
+              id: "8",
+              img: "https://picsum.photos/id/1043/600/750?grayscale",
+              url: "#",
+              height: 380,
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching hero images:', error);
+        // Use fallback images
+        setMasonryItems([
+          {
+            id: "1",
+            img: "https://picsum.photos/id/1015/600/900?grayscale",
+            url: "#",
+            height: 400,
+          },
+          {
+            id: "2", 
+            img: "https://picsum.photos/id/1011/600/750?grayscale",
+            url: "#",
+            height: 250,
+          },
+          {
+            id: "3",
+            img: "https://picsum.photos/id/1020/600/800?grayscale", 
+            url: "#",
+            height: 600,
+          },
+          {
+            id: "4",
+            img: "https://picsum.photos/id/1025/600/700?grayscale",
+            url: "#", 
+            height: 350,
+          },
+          {
+            id: "5",
+            img: "https://picsum.photos/id/1031/600/850?grayscale",
+            url: "#",
+            height: 500,
+          },
+          {
+            id: "6",
+            img: "https://picsum.photos/id/1035/600/650?grayscale",
+            url: "#",
+            height: 300,
+          },
+          {
+            id: "7",
+            img: "https://picsum.photos/id/1040/600/900?grayscale",
+            url: "#",
+            height: 450,
+          },
+          {
+            id: "8",
+            img: "https://picsum.photos/id/1043/600/750?grayscale",
+            url: "#",
+            height: 380,
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHeroImages();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -134,17 +206,23 @@ const Hero = () => {
       
       {/* Masonry Overlay */}
       <div className="absolute inset-0 z-10 opacity-20 pointer-events-none">
-        <Masonry
-          items={masonryItems}
-          ease="power3.out"
-          duration={0.6}
-          stagger={0.1}
-          animateFrom="random"
-          scaleOnHover={false}
-          hoverScale={0.95}
-          blurToFocus={true}
-          colorShiftOnHover={false}
-        />
+        {loading ? (
+          <div className="w-full h-full bg-black/50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+        ) : (
+          <Masonry
+            items={masonryItems}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.1}
+            animateFrom="random"
+            scaleOnHover={false}
+            hoverScale={0.95}
+            blurToFocus={true}
+            colorShiftOnHover={false}
+          />
+        )}
       </div>
       
       {/* Film Roll Component */}

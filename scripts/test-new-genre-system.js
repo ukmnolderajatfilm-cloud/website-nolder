@@ -38,7 +38,7 @@ async function testNewGenreSystem() {
           filmTitle: 'Test Film with Multiple Genres',
           duration: 120,
           director: 'Test Director',
-          releaseDate: new Date('2024-01-01'),
+          releaseYear: '2024',
           status: 'coming_soon',
           adminId: 1, // Assuming admin with ID 1 exists
           filmGenres: {

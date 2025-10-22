@@ -10,6 +10,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model HeroImage {
+  id        Int      @id @default(autoincrement())
+  imageUrl  String   @map("image_url")
+  imagePath String?  @map("image_path")
+  url       String?  // Optional URL untuk link
+  height    Int      @default(400) // Height untuk masonry
+  order     Int      @default(0) // Order untuk sorting
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  adminId   Int      @map("admin_id")
+  admin     Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("hero_images")
+}
+
 model Admin {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -28,6 +44,7 @@ model Admin {
   cabinets Cabinet[]
   films Film[]
   articles Article[]
+  heroImages HeroImage[]
 
   @@map("admins")
 }
@@ -130,7 +147,7 @@ model Film {
   filmTitle   String    @map("film_title")
   duration    Int       // in minutes
   director    String
-  releaseDate DateTime  @map("release_date") @db.Date
+  releaseYear String    @map("release_year")
   status      FilmStatus @default(coming_soon)
   description String? @db.Text
   posterUrl   String?   @map("poster_url")

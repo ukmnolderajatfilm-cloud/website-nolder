@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../../../lib/db'
 import { verifyPassword, generateToken } from '../../../../lib/auth'
-import { logger } from '../../../lib/logger'
+import { logger, auth } from '../../../../lib/logger'
 
 export async function POST(request) {
   const startTime = Date.now();
@@ -20,7 +20,7 @@ export async function POST(request) {
     })
 
     if (!admin) {
-      logger.auth('Login failed - user not found', username, false, { 
+      auth('Login failed - user not found', username, false, { 
         username, 
         ip: request.ip,
         userAgent: request.headers.get('user-agent')
@@ -35,7 +35,7 @@ export async function POST(request) {
     // Verifikasi password
     const isValid = await verifyPassword(password, admin.password)
     if (!isValid) {
-      logger.auth('Login failed - invalid password', username, false, { 
+      auth('Login failed - invalid password', username, false, { 
         username, 
         ip: request.ip,
         userAgent: request.headers.get('user-agent')
@@ -82,7 +82,7 @@ export async function POST(request) {
 
     // Log successful login
     const responseTime = Date.now() - startTime;
-    logger.auth('Login successful', username, true, { 
+    auth('Login successful', username, true, { 
       adminId: admin.id,
       role: admin.role,
       ip: request.ip,

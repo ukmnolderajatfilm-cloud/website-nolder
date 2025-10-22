@@ -43,7 +43,7 @@ async function testNoRating() {
           filmGenre: 'Action',
           duration: 120,
           director: 'Test Director',
-          releaseDate: new Date('2024-01-01'),
+          releaseYear: '2024',
           status: 'coming_soon',
           description: 'Test film without rating field',
           adminId: 1 // Assuming admin with ID 1 exists

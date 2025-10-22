@@ -18,7 +18,7 @@ export async function GET(request) {
       page: 1,
       per_page: limit,
       status: status,
-      sort_by: 'releaseDate',
+      sort_by: 'releaseYear',
       sort_order: 'desc',
       include_deleted: false
     };

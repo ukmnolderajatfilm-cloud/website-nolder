@@ -45,13 +45,14 @@ export class FilmService {
       errors.director = 'Director name must be less than 255 characters'
     }
     
-    // Release date validation
-    if (!data.release_date) {
-      errors.release_date = 'Release date is required'
+    // Release year validation
+    if (!data.release_year) {
+      errors.release_year = 'Release year is required'
     } else {
-      const releaseDate = new Date(data.release_date)
-      if (isNaN(releaseDate.getTime())) {
-        errors.release_date = 'Invalid release date format'
+      const year = parseInt(data.release_year)
+      const currentYear = new Date().getFullYear()
+      if (isNaN(year) || year < 1900 || year > currentYear + 10) {
+        errors.release_year = 'Release year must be between 1900 and ' + (currentYear + 10)
       }
     }
     
@@ -146,12 +147,7 @@ export class FilmService {
 
     // Year filter
     if (year) {
-      const startDate = new Date(`${year}-01-01`)
-      const endDate = new Date(`${year}-12-31`)
-      where.releaseDate = {
-        gte: startDate,
-        lte: endDate
-      }
+      where.releaseYear = year
     }
 
     // Build orderBy
@@ -161,13 +157,13 @@ export class FilmService {
     } else if (sortBy === 'genre') {
       orderBy.filmTitle = sortOrder // Fallback to title since we can't sort by multiple genres easily
     } else if (sortBy === 'date') {
-      orderBy.releaseDate = sortOrder
+      orderBy.releaseYear = sortOrder
     } else if (sortBy === 'status') {
       orderBy.status = sortOrder
     } else if (sortBy === 'filmTitle') {
       orderBy.filmTitle = sortOrder
     } else if (sortBy === 'releaseDate') {
-      orderBy.releaseDate = sortOrder
+      orderBy.releaseYear = sortOrder
     } else {
       orderBy.createdAt = sortOrder
     }
@@ -306,7 +302,7 @@ export class FilmService {
           filmTitle: data.film_title.trim(),
           duration: durationValue,
           director: data.director.trim(),
-          releaseDate: new Date(data.release_date),
+          releaseYear: data.release_year,
           status: data.status,
           description: data.description?.trim() || null,
           posterUrl: data.poster_url?.trim() || null,
@@ -402,7 +398,7 @@ export class FilmService {
             filmTitle: data.film_title.trim(),
             duration: durationValue,
             director: data.director.trim(),
-            releaseDate: new Date(data.release_date),
+            releaseYear: data.release_year,
             status: data.status,
             description: data.description?.trim() || null,
             posterUrl: data.poster_url?.trim() || null,

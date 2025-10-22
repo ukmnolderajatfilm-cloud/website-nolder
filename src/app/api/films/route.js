@@ -19,7 +19,7 @@ export async function GET(request) {
     const genre = searchParams.get('genre') || '';
     const status = searchParams.get('status') || 'now_showing'; // Default to now_showing for public
     const statusFilter = status === 'all' ? '' : status; // If status is 'all', don't filter by status
-    const sort_by = searchParams.get('sort_by') || 'releaseDate';
+    const sort_by = searchParams.get('sort_by') || 'releaseYear';
     const sort_order = searchParams.get('sort_order') || 'desc';
 
     // Log API request

@@ -32,7 +32,7 @@ export default function GalleryPage() {
             subtitle: film.description ? film.description.substring(0, 50) + '...' : 'Film Description',
             image: film.posterPath || film.posterUrl,
             videoId: film.trailerUrl ? extractVideoId(film.trailerUrl) : 'R37-EC48yoc',
-            year: new Date(film.releaseDate).getFullYear().toString(),
+            year: film.releaseYear,
             genre: film.filmGenre,
             description: film.description || 'No description available.',
             status: film.status

@@ -8,6 +8,7 @@ import FilmManager from './components/FilmManager';
 import SettingsManager from './components/SettingsManager';
 import CabinetManager from './components/CabinetManager';
 import BlogManager from './components/BlogManager';
+import ManageHeroSection from './components/ManageHeroSection';
 
 export default function AdminDashboard() {
   const [adminUser, setAdminUser] = useState('');
@@ -300,6 +301,16 @@ export default function AdminDashboard() {
                 Blog Management
               </button>
               <button
+                onClick={() => setActiveTab('hero')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'hero'
+                    ? 'border-yellow-500 text-yellow-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Manage Hero
+              </button>
+              <button
                 onClick={() => setActiveTab('settings')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'settings'
@@ -470,6 +481,18 @@ export default function AdminDashboard() {
                         </button>
                         
                         <button 
+                          onClick={() => setActiveTab('hero')}
+                          className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
+                        >
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-pink-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd"/>
+                            </svg>
+                            <span className="text-white font-medium">Manage Hero</span>
+                          </div>
+                        </button>
+                        
+                        <button 
                           onClick={() => setActiveTab('settings')}
                           className="w-full text-left p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 group-hover:scale-105"
                         >
@@ -609,6 +632,10 @@ export default function AdminDashboard() {
 
           {activeTab === 'blog' && (
             <BlogManager />
+          )}
+
+          {activeTab === 'hero' && (
+            <ManageHeroSection />
           )}
 
           {activeTab === 'settings' && (
