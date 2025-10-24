@@ -24,9 +24,13 @@ export default function EditArticlePage() {
 
   // Load article and categories on mount
   useEffect(() => {
-    if (params.id) {
+    if (params.id && params.id !== 'null' && params.id !== 'undefined') {
       loadArticle();
       fetchCategories();
+    } else {
+      console.error('Invalid article ID:', params.id);
+      alert('Invalid article ID');
+      router.push('/admin/dashboard?tab=blog');
     }
   }, [params.id]);
 
@@ -46,6 +50,11 @@ export default function EditArticlePage() {
   }, [formData.title, formData.content]);
 
   const loadArticle = async () => {
+    if (!params.id || params.id === 'null' || params.id === 'undefined') {
+      console.error('Invalid article ID for loading:', params.id);
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('admin-token');
       const response = await fetch(`/api/admin/articles/${params.id}`, {

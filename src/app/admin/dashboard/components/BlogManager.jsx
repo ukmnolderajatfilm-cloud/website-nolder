@@ -71,7 +71,12 @@ const BlogManager = () => {
 
   // Handle edit article
   const handleEdit = (article) => {
-    router.push(`/admin/blog/edit/${article.id}`);
+    if (article && article.id) {
+      router.push(`/admin/blog/edit/${article.id}`);
+    } else {
+      console.error('Article ID is missing:', article);
+      alert('Article ID is missing');
+    }
   };
 
   // Handle delete

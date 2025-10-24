@@ -45,16 +45,26 @@ const useMeasure = () => {
 };
 
 const preloadImages = async urls => {
+  console.log('PreloadImages: Starting to preload', urls.length, 'images');
   await Promise.all(
     urls.map(
       src =>
         new Promise(resolve => {
+          console.log('PreloadImages: Loading image:', src);
           const img = new Image();
           img.src = src;
-          img.onload = img.onerror = () => resolve();
+          img.onload = () => {
+            console.log('PreloadImages: Image loaded successfully:', src);
+            resolve();
+          };
+          img.onerror = () => {
+            console.error('PreloadImages: Image failed to load:', src);
+            resolve();
+          };
         })
     )
   );
+  console.log('PreloadImages: All images processed');
 };
 
 const Masonry = ({
@@ -66,7 +76,9 @@ const Masonry = ({
   scaleOnHover = true,
   hoverScale = 0.95,
   blurToFocus = true,
-  colorShiftOnHover = false
+  colorShiftOnHover = false,
+  onItemClick,
+  renderItem
 }) => {
   const columns = useMedia(
     ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
@@ -107,17 +119,29 @@ const Masonry = ({
   };
 
   useEffect(() => {
-    preloadImages(items.map(i => i.img)).then(() => setImagesReady(true));
+    const imageUrls = items.map(i => i.img).filter(Boolean);
+    console.log('Masonry: Preloading images:', imageUrls);
+    preloadImages(imageUrls).then(() => {
+      console.log('Masonry: Images preloaded successfully');
+      setImagesReady(true);
+    });
   }, [items]);
 
   const grid = useMemo(() => {
     if (!width) return [];
+    console.log('Masonry: Processing', items.length, 'items');
+    console.log('Masonry: Items data:', items);
     const colHeights = new Array(columns).fill(0);
     const gap = 16;
     const totalGaps = (columns - 1) * gap;
     const columnWidth = (width - totalGaps) / columns;
 
-    return items.map(child => {
+    const result = items.map((child, index) => {
+      console.log(`Masonry: Processing item ${index}:`, {
+        id: child.id,
+        img: child.img,
+        height: child.height
+      });
       const col = colHeights.indexOf(Math.min(...colHeights));
       const x = col * (columnWidth + gap);
       const height = child.height / 2;
@@ -126,6 +150,9 @@ const Masonry = ({
       colHeights[col] += height + gap;
       return { ...child, x, y, w: columnWidth, h: height };
     });
+    
+    console.log('Masonry: Generated', result.length, 'grid items');
+    return result;
   }, [columns, items, width]);
 
   const hasMounted = useRef(false);
@@ -208,18 +235,22 @@ const Masonry = ({
           data-key={item.id}
           className="absolute box-content"
           style={{ willChange: 'transform, width, height, opacity' }}
-          onClick={() => window.open(item.url, '_blank', 'noopener')}
+          onClick={() => onItemClick ? onItemClick(item) : window.open(item.url, '_blank', 'noopener')}
           onMouseEnter={e => handleMouseEnter(item.id, e.currentTarget)}
           onMouseLeave={e => handleMouseLeave(item.id, e.currentTarget)}
         >
-          <div
-            className="relative w-full h-full bg-cover bg-center rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] uppercase text-[10px] leading-[10px]"
-            style={{ backgroundImage: `url(${item.img})` }}
-          >
-            {colorShiftOnHover && (
-              <div className="color-overlay absolute inset-0 rounded-[10px] bg-gradient-to-tr from-pink-500/50 to-sky-500/50 opacity-0 pointer-events-none" />
-            )}
-          </div>
+          {renderItem ? (
+            renderItem(item)
+          ) : (
+            <div
+              className="relative w-full h-full bg-cover bg-center rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] uppercase text-[10px] leading-[10px]"
+              style={{ backgroundImage: `url(${item.img})` }}
+            >
+              {colorShiftOnHover && (
+                <div className="color-overlay absolute inset-0 rounded-[10px] bg-gradient-to-tr from-pink-500/50 to-sky-500/50 opacity-0 pointer-events-none" />
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

@@ -11,24 +11,14 @@ const prisma = new PrismaClient();
  */
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const perPage = parseInt(searchParams.get('per_page')) || 10;
-    const skip = (page - 1) * perPage;
-
-    // Use raw SQL query as fallback
+    // Get all hero images without pagination for admin dashboard
     const heroImages = await prisma.$queryRaw`
       SELECT h.*, a.username, a.name 
       FROM hero_images h 
       LEFT JOIN admins a ON h.admin_id = a.id 
-      ORDER BY h.order ASC 
-      LIMIT ${perPage} OFFSET ${skip}
+      WHERE h.isActive = 1
+      ORDER BY h.order ASC
     `;
-
-    const totalResult = await prisma.$queryRaw`
-      SELECT COUNT(*) as count FROM hero_images
-    `;
-    const total = Number(totalResult[0].count);
 
     return NextResponse.json({
       meta: {
@@ -37,13 +27,7 @@ export async function GET(request) {
         code: 200
       },
       data: {
-        heroImages,
-        pagination: {
-          page,
-          perPage,
-          total,
-          totalPages: Math.ceil(total / perPage)
-        }
+        heroImages
       }
     });
 

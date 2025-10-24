@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { gsap } from 'gsap';
+import Masonry from '../../../(main)/Components/Masonry/Masonry';
 
 const ManageHeroSection = () => {
   const [heroImages, setHeroImages] = useState([]);
@@ -16,21 +18,42 @@ const ManageHeroSection = () => {
     selectedFile: null
   });
 
-  // Generate 10 slots for hero images
+  // Generate 13 slots for hero images with medium heights for masonry effect
   const generateSlots = () => {
     const slots = [];
-    for (let i = 1; i <= 10; i++) {
+    const heights = [280, 320, 360, 300, 340, 380, 260, 400, 320, 300, 360, 280, 340]; // 13 medium heights
+    
+    console.log('Admin: Current heroImages:', heroImages);
+    console.log('Admin: Number of heroImages:', heroImages.length);
+    
+    for (let i = 1; i <= 13; i++) {
       const existingImage = heroImages.find(img => img.order === i);
+      console.log(`Admin: Slot ${i} - Found image:`, existingImage ? 'YES' : 'NO', existingImage);
       slots.push({
         id: i,
         order: i,
-        image: existingImage || null
+        image: existingImage || null,
+        height: heights[i - 1] || 400
       });
     }
+    
+    console.log('Admin: Generated slots:', slots.map(s => ({ id: s.id, order: s.order, hasImage: !!s.image })));
     return slots;
   };
 
   const slots = generateSlots();
+  console.log('Generated slots:', slots.length, 'slots');
+
+  // Convert slots to masonry items format
+  const masonryItems = slots.map(slot => ({
+    id: slot.id.toString(),
+    img: slot.image ? (slot.image.image_path || slot.image.image_url || slot.image.img) : null,
+    url: '#',
+    height: slot.height,
+    slot: slot // Keep reference to original slot data
+  }));
+  
+  console.log('Masonry items:', masonryItems.length, 'items');
 
   // Fetch hero images
   const fetchHeroImages = useCallback(async () => {
@@ -46,6 +69,8 @@ const ManageHeroSection = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log('Admin: API Response:', result);
+        console.log('Admin: HeroImages from API:', result.data.heroImages);
         setHeroImages(result.data.heroImages || []);
       } else {
         toast.error('Failed to fetch hero images');
@@ -61,6 +86,12 @@ const ManageHeroSection = () => {
   useEffect(() => {
     fetchHeroImages();
   }, [fetchHeroImages]);
+
+  // Handle slot click for masonry items
+  const handleMasonryItemClick = (item) => {
+    const slot = item.slot;
+    handleSlotClick(slot);
+  };
 
   // Handle image upload
   const handleImageUpload = async (file, slotId) => {
@@ -107,8 +138,10 @@ const ManageHeroSection = () => {
       });
 
       if (createResponse.ok) {
+        const newImageData = await createResponse.json();
+        // Update state immediately without reload
+        setHeroImages(prev => [...prev, newImageData.data]);
         toast.success('Hero image uploaded successfully');
-        fetchHeroImages();
         setShowUploadModal(false);
         setSelectedSlot(null);
       } else {
@@ -142,8 +175,9 @@ const ManageHeroSection = () => {
       console.log('Delete response status:', response.status);
       
       if (response.ok) {
+        // Update state immediately without reload
+        setHeroImages(prev => prev.filter(img => img.id !== imageId));
         toast.success('Hero image deleted successfully');
-        fetchHeroImages();
       } else {
         const errorData = await response.json();
         console.error('Delete error response:', errorData);
@@ -204,69 +238,84 @@ const ManageHeroSection = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Manage Hero Section</h2>
-        <p className="text-gray-400 text-sm">
-          Click on empty slots to add images, or click on existing images to manage them
-        </p>
-      </div>
+    <div className="min-h-screen bg-transparent p-6">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">Manage Hero Section</h2>
+          <p className="text-gray-400 text-sm">
+            Click on empty slots to add images, or click on existing images to manage them
+          </p>
+        </div>
 
-      {/* Hero Images Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {slots.map((slot) => (
-          <div
-            key={slot.id}
-            className="relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group"
-            onClick={() => handleSlotClick(slot)}
-          >
-            {slot.image ? (
-              // Existing image
-              <div className="relative w-full h-full">
-                <img
-                  src={slot.image.image_path || slot.image.image_url}
-                  alt={`Hero image ${slot.order}`}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteImage(slot.image.id);
-                      }}
-                      className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors duration-200"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
+        {/* Masonry Hero Images Grid */}
+        <div className="relative min-h-[600px] bg-transparent">
+          <Masonry
+            items={masonryItems}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.05}
+            animateFrom="bottom"
+            scaleOnHover={true}
+            hoverScale={0.95}
+            blurToFocus={true}
+            colorShiftOnHover={false}
+            onItemClick={handleMasonryItemClick}
+            renderItem={(item) => {
+              const slot = item.slot;
+              return (
+                <div className="relative w-full h-full group">
+                  {slot.image ? (
+                    // Existing image
+                    <div className="relative w-full h-full rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] overflow-hidden">
+                      <img
+                        src={slot.image.image_path || slot.image.image_url}
+                        alt={`Hero image ${slot.order}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteImage(slot.image.id);
+                            }}
+                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        Slot {slot.order}
+                      </div>
+                    </div>
+                  ) : (
+                    // Empty slot
+                    <div className="w-full h-full border-2 border-dashed border-gray-400 rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] flex items-center justify-center hover:border-white transition-colors duration-200 bg-gray-800/50">
+                      <div className="text-center">
+                        <div className="w-8 h-8 mx-auto mb-2 text-gray-400 hover:text-white transition-colors duration-200">
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <p className="text-xs text-gray-400 hover:text-white transition-colors duration-200">
+                          Add Image
+                        </p>
+                      </div>
+                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        Slot {slot.order}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                  Slot {slot.order}
-                </div>
-              </div>
-            ) : (
-              // Empty slot
-              <div className="w-full h-full border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center group-hover:border-white transition-colors duration-200">
-                <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-2 text-gray-400 group-hover:text-white transition-colors duration-200">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-gray-400 group-hover:text-white transition-colors duration-200">
-                    Add Image
-                  </p>
-                </div>
-                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                  Slot {slot.order}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+              );
+            }}
+          />
+        </div>
+
+        
       </div>
 
       {/* Upload Modal */}
@@ -325,18 +374,6 @@ const ManageHeroSection = () => {
           </div>
         </div>
       )}
-
-      {/* Info */}
-      <div className="bg-gray-800 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-white mb-2">How to use:</h3>
-        <ul className="text-gray-300 space-y-1 text-sm">
-          <li>• Click on empty slots (dashed border) to upload new images</li>
-          <li>• Select a file and click "Add Image" to upload</li>
-          <li>• Click on existing images to manage them (delete, etc.)</li>
-          <li>• Images are displayed in order from slot 1 to 10</li>
-          <li>• Only active images will be shown on the frontend</li>
-        </ul>
-      </div>
     </div>
   );
 };
